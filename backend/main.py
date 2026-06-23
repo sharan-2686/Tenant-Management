@@ -176,3 +176,35 @@ def checkin_tenant(
     return {
         "message": "Tenant checked in successfully"
     }
+    from datetime import datetime
+
+@app.put("/checkout/{tenant_id}")
+def checkout_tenant(
+    tenant_id: int,
+    db: Session = Depends(getdb)
+):
+    stay = db.query(TenantStay).filter(
+        TenantStay.tenant_id == tenant_id,
+        TenantStay.stay_status == "checked_in"
+    ).first()
+
+    if not stay:
+        raise HTTPException(
+            status_code=404,
+            detail="No active stay found"
+        )
+
+    stay.checkout_time = datetime.utcnow()
+    stay.stay_status = "checked_out"
+
+    tenant = db.query(dbtenant).filter(
+        dbtenant.id == tenant_id
+    ).first()
+
+    
+
+    db.commit()
+
+    return {
+        "message": "Tenant checked out successfully"
+    }
