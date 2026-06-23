@@ -1,0 +1,37 @@
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, DateTime, Text
+from datetime import datetime
+
+Base = declarative_base()
+
+
+class Tenant(Base):
+    __tablename__ = "tenants"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # basic details
+    full_name = Column(String(100), nullable=False)
+    email = Column(String(150), nullable=True)
+    phone = Column(String(15), nullable=True)
+    gender = Column(String(20), nullable=True)
+
+    # KYC details
+    aadhaar_number = Column(String(20), nullable=True)
+    pan_number = Column(String(20), nullable=True)
+
+    # address info
+    address = Column(Text, nullable=True)
+
+    # emergency contact
+    emergency_contact_name = Column(String(100), nullable=True)
+    emergency_contact_phone = Column(String(15), nullable=True)
+
+    # status tracking
+    status = Column(String(30), default="pending_kyc")
+
+    # timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    aadhaar_pdf_url = Column(String, nullable=True)
+    pan_pdf_url = Column(String, nullable=True)
+    id_card_pdf_url = Column(String, nullable=True)
