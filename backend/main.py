@@ -11,6 +11,7 @@ from typing import Optional
 from db import supabase
 from datetime import datetime
 from fastapi.exceptions import HTTPException
+from dbmodels import Visitor as dbvisitor
 app=FastAPI()
 
 class TenantCreate(BaseModel):
@@ -44,6 +45,12 @@ class TenantUpdate(BaseModel):
 
 class KYCVerify(BaseModel):
  status: str
+class VisitorCreate(BaseModel):
+    tenant_id: int
+    visitor_name: str
+    visitor_phone: Optional[str] = None
+    address: Optional[str] = None
+    purpose: Optional[str] = None
 
 
 def getdb():
@@ -176,16 +183,11 @@ def checkin_tenant(
     return {
         "message": "Tenant checked in successfully"
     }
-    from datetime import datetime
-
 @app.put("/checkout/{tenant_id}")
-def checkout_tenant(
-    tenant_id: int,
-    db: Session = Depends(getdb)
-):
+def checkout_tenant( tenant_id: int, db: Session = Depends(getdb)):
     stay = db.query(TenantStay).filter(
-        TenantStay.tenant_id == tenant_id,
-        TenantStay.stay_status == "checked_in"
+    TenantStay.tenant_id == tenant_id,
+     TenantStay.stay_status == "checked_in"
     ).first()
 
     if not stay:
@@ -208,3 +210,11 @@ def checkout_tenant(
     return {
         "message": "Tenant checked out successfully"
     }
+@app.post("/add-visitor")
+def add_visitor(vis: VisitorCreate, db: Session = Depends(getdb)):
+   data = vis.model_dump()
+   new_visitor = dbvisitor(**data)
+   db.add(new_visitor)
+   db.commit()
+   db.refresh(new_visitor)
+   return new_visitor

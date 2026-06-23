@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text,ForeignKey
 from datetime import datetime
 
 Base = declarative_base()
@@ -70,3 +70,19 @@ class TenantStay(Base):
     )
 
     remarks = Column(Text)
+class Visitor(Base):
+    __tablename__ = "visitors"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    tenant_id = Column(Integer, ForeignKey("tenants.id"))
+
+    visitor_name = Column(String(100), nullable=False)
+    visitor_phone = Column(String(15))
+    address = Column(Text)
+    purpose = Column(Text)
+
+    entry_time = Column(DateTime, default=datetime.utcnow)
+    exit_time = Column(DateTime)
+
+    status = Column(String(20), default="inside")
