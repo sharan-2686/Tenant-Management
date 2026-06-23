@@ -35,3 +35,38 @@ class Tenant(Base):
     aadhaar_pdf_url = Column(String, nullable=True)
     pan_pdf_url = Column(String, nullable=True)
     id_card_pdf_url = Column(String, nullable=True)
+
+class TenantStay(Base):
+    __tablename__ = "tenant_stays"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    tenant_id = Column(
+        Integer,
+        ForeignKey("tenants.id")
+    )
+
+    property_id = Column(
+        Integer
+    )
+
+    room_id = Column(
+        Integer
+    )
+
+    checkin_time = Column(
+        DateTime,
+        default=datetime.utcnow
+    )
+
+    checkout_time = Column(
+        DateTime,
+        nullable=True
+    )
+
+    stay_status = Column(
+        String,
+        default="checked_in"
+    )
+
+    remarks = Column(Text)

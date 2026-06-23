@@ -3,12 +3,14 @@ from pydantic import BaseModel
 from db import engine,SessionLocal
 from sqlalchemy.orm import Session
 from dbmodels import Tenant as dbtenant
+from dbmodels import TenantStay
 from pydantic import BaseModel
 from typing import Optional
 from pydantic import BaseModel
 from typing import Optional
 from db import supabase
-
+from datetime import datetime
+from fastapi.exceptions import HTTPException
 app=FastAPI()
 
 class TenantCreate(BaseModel):
@@ -143,4 +145,34 @@ def upload_kyc(
         "pan": pan_url,
         "id_card": id_url
     }
-         
+@app.post("/checkin/{tenant_id}")
+def checkin_tenant(
+    tenant_id: int,
+    db: Session = Depends(getdb)
+):
+    tenant = db.query(dbtenant).filter(
+        dbtenant.id == tenant_id
+    ).first()
+
+    if not tenant:
+        raise HTTPException(
+            status_code=404,
+            detail="Tenant not found"
+        )
+
+    stay = TenantStay(
+        tenant_id=tenant.id,
+        property_id=tenant.property_id,
+        room_id=tenant.room_id,
+        bed_id=tenant.bed_id,
+        stay_status="checked_in"
+    )
+
+    db.add(stay)
+
+    
+    db.commit()
+
+    return {
+        "message": "Tenant checked in successfully"
+    }
