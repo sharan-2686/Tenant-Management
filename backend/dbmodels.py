@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, Text,ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Date, Numeric, Boolean
 from datetime import datetime
 
 Base = declarative_base()
@@ -35,6 +35,15 @@ class Tenant(Base):
     aadhaar_pdf_url = Column(String, nullable=True)
     pan_pdf_url = Column(String, nullable=True)
     id_card_pdf_url = Column(String, nullable=True)
+
+    # Missing database columns
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    property_id = Column(Integer, ForeignKey("properties.id"), nullable=True)
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=True)
+    bed_id = Column(Integer, ForeignKey("beds.id"), nullable=True)
+    checkin_date = Column(Date, nullable=True)
+    checkout_date = Column(Date, nullable=True)
+    security_deposit = Column(Numeric, nullable=True)
 
 class TenantStay(Base):
     __tablename__ = "tenant_stays"
@@ -86,3 +95,86 @@ class Visitor(Base):
     exit_time = Column(DateTime)
 
     status = Column(String(20), default="inside")
+
+class Feedback(Base):
+    __tablename__ = "complaints"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
+
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=False)
+
+    status = Column(String(50), default="in_progress")
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    resolved_at = Column(DateTime, nullable=True)
+
+
+class Property(Base):
+    __tablename__ = "properties"
+
+    id = Column(Integer, primary_key=True, index=True)
+    property_name = Column(String, nullable=False)
+    address = Column(Text, nullable=False)
+    city = Column(String, nullable=True)
+    state = Column(String, nullable=True)
+    pincode = Column(String, nullable=True)
+    owner_name = Column(String, nullable=True)
+    owner_phone = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    razorpay_account_id = Column(String, nullable=True)
+
+
+class Room(Base):
+    __tablename__ = "rooms"
+
+    id = Column(Integer, primary_key=True, index=True)
+    property_id = Column(Integer, ForeignKey("properties.id"), nullable=False)
+    room_number = Column(String, nullable=False)
+    room_type = Column(String, nullable=True)
+    capacity = Column(Integer, nullable=False)
+    monthly_rent = Column(Numeric, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RentPayment(Base):
+    __tablename__ = "rent_payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)
+    amount = Column(Numeric, nullable=False)
+    due_date = Column(Date, nullable=False)
+    paid_date = Column(Date, nullable=True)
+    payment_method = Column(String, nullable=True)
+    payment_status = Column(String, default="pending")
+    receipt_number = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    billing_period = Column(String(10), nullable=True)
+    late_fee = Column(Numeric, default=0)
+    razorpay_order_id = Column(String, nullable=True)
+    razorpay_payment_id = Column(String, nullable=True)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    full_name = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True)
+    phone = Column(String, nullable=False, unique=True)
+    password_hash = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Bed(Base):
+    __tablename__ = "beds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_id = Column(Integer, ForeignKey("rooms.id"), nullable=False)
+    bed_number = Column(String, nullable=False)
+    status = Column(String, default="available")
+
+
