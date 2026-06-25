@@ -1,22 +1,30 @@
 from fastapi import FastAPI,Depends,UploadFile,File
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from db import engine,SessionLocal
 from sqlalchemy.orm import Session
 from dbmodels import Tenant as dbtenant
-from dbmodels import TenantStay, Room as dbroom, RentPayment as dbrentpayment, Property as dbproperty
+from dbmodels import TenantStay, Room as dbroom, RentPayment as dbrentpayment, Property as dbproperty, User as dbuser, Bed as dbbed
 import asyncio
 import os
 import razorpay
-from pydantic import BaseModel
-from typing import Optional
-from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from db import supabase
 from datetime import datetime, date, timedelta
 from fastapi.exceptions import HTTPException
 from dbmodels import Visitor as dbvisitor
 from dbmodels import Feedback
+
 app=FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # For local development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class TenantCreate(BaseModel):
  full_name: str
@@ -93,6 +101,17 @@ class FeedbackResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserRegister(BaseModel):
+    full_name: str
+    email: str
+    phone: str
+    password: str
+    role: str # tenant, landlord, admin
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
 
 def getdb():
    db=SessionLocal()
@@ -650,3 +669,190 @@ def verify_razorpay_payment(req: RentVerifyRequest, db: Session = Depends(getdb)
     db.refresh(payment)
 
     return make_rent_payment_response(payment, db, paid_date)
+
+
+# --- Additional Mobile App API Endpoints ---
+
+@app.post("/register")
+def register_user(user: UserRegister, db: Session = Depends(getdb)):
+    existing = db.query(dbuser).filter((dbuser.email == user.email) | (dbuser.phone == user.phone)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email or phone already registered")
+    new_user = dbuser(
+        full_name=user.full_name,
+        email=user.email,
+        phone=user.phone,
+        password_hash=user.password,  # Storing as is for development/mocking
+        role=user.role,
+        is_active=True
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return {"message": "User registered successfully", "id": new_user.id, "role": new_user.role}
+
+
+@app.post("/login")
+def login_user(user: UserLogin, db: Session = Depends(getdb)):
+    db_user = db.query(dbuser).filter(dbuser.email == user.email).first()
+    if not db_user or db_user.password_hash != user.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    # Check if user is also a tenant to return tenant_id
+    tenant_id = None
+    if db_user.role == "tenant":
+        tenant = db.query(dbtenant).filter(dbtenant.email == db_user.email).first()
+        if tenant:
+            tenant_id = tenant.id
+    
+    return {
+        "message": "Login successful",
+        "user_id": db_user.id,
+        "full_name": db_user.full_name,
+        "email": db_user.email,
+        "phone": db_user.phone,
+        "role": db_user.role,
+        "tenant_id": tenant_id
+    }
+
+
+@app.get("/properties")
+def get_properties(db: Session = Depends(getdb)):
+    return db.query(dbproperty).all()
+
+
+@app.get("/properties/{property_id}/rooms")
+def get_property_rooms(property_id: int, db: Session = Depends(getdb)):
+    return db.query(dbroom).filter(dbroom.property_id == property_id).all()
+
+
+@app.get("/rooms/{room_id}/beds")
+def get_room_beds(room_id: int, db: Session = Depends(getdb)):
+    return db.query(dbbed).filter(dbbed.room_id == room_id).all()
+
+
+@app.get("/tenants")
+def get_tenants(property_id: Optional[int] = None, db: Session = Depends(getdb)):
+    query = db.query(dbtenant)
+    if property_id:
+        query = query.filter(dbtenant.property_id == property_id)
+    return query.all()
+
+
+@app.get("/tenants/{tenant_id}")
+def get_tenant_details(tenant_id: int, db: Session = Depends(getdb)):
+    tenant = db.query(dbtenant).filter(dbtenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+    
+    # Fetch active stay info if any
+    stay = db.query(TenantStay).filter(
+        TenantStay.tenant_id == tenant_id,
+        TenantStay.stay_status == "checked_in"
+    ).first()
+    
+    # Get room and bed info
+    room_number = None
+    property_name = None
+    bed_number = None
+    if tenant.room_id:
+        room = db.query(dbroom).filter(dbroom.id == tenant.room_id).first()
+        if room:
+            room_number = room.room_number
+    if tenant.property_id:
+        prop = db.query(dbproperty).filter(dbproperty.id == tenant.property_id).first()
+        if prop:
+            property_name = prop.property_name
+    if tenant.bed_id:
+        bed = db.query(dbbed).filter(dbbed.id == tenant.bed_id).first()
+        if bed:
+            bed_number = bed.bed_number
+
+    return {
+        "id": tenant.id,
+        "full_name": tenant.full_name,
+        "email": tenant.email,
+        "phone": tenant.phone,
+        "gender": tenant.gender,
+        "status": tenant.status,
+        "property_id": tenant.property_id,
+        "property_name": property_name,
+        "room_id": tenant.room_id,
+        "room_number": room_number,
+        "bed_id": tenant.bed_id,
+        "bed_number": bed_number,
+        "checkin_date": tenant.checkin_date,
+        "checkout_date": tenant.checkout_date,
+        "security_deposit": float(tenant.security_deposit) if tenant.security_deposit else 0.0,
+        "aadhaar_number": tenant.aadhaar_number,
+        "pan_number": tenant.pan_number,
+        "address": tenant.address,
+        "emergency_contact_name": tenant.emergency_contact_name,
+        "emergency_contact_phone": tenant.emergency_contact_phone,
+        "aadhaar_pdf_url": tenant.aadhaar_pdf_url,
+        "pan_pdf_url": tenant.pan_pdf_url,
+        "id_card_pdf_url": tenant.id_card_pdf_url,
+        "has_active_stay": stay is not None
+    }
+
+
+@app.get("/feedback")
+def get_all_feedback(db: Session = Depends(getdb)):
+    feedbacks = db.query(Feedback).order_by(Feedback.created_at.desc()).all()
+    response_data = []
+    for fb in feedbacks:
+        tenant = db.query(dbtenant).filter(dbtenant.id == fb.tenant_id).first()
+        tenant_name = tenant.full_name if tenant else f"Tenant #{fb.tenant_id}"
+        response_data.append({
+            "id": fb.id,
+            "tenant_id": fb.tenant_id,
+            "tenant_name": tenant_name,
+            "title": fb.title,
+            "description": fb.description,
+            "status": fb.status,
+            "created_at": fb.created_at,
+            "resolved_at": fb.resolved_at
+        })
+    return response_data
+
+
+@app.get("/feedback/tenant/{tenant_id}")
+def get_tenant_feedback(tenant_id: int, db: Session = Depends(getdb)):
+    return db.query(Feedback).filter(Feedback.tenant_id == tenant_id).order_by(Feedback.created_at.desc()).all()
+
+
+@app.post("/feedback/{feedback_id}/resolve")
+def resolve_feedback(feedback_id: int, db: Session = Depends(getdb)):
+    fb = db.query(Feedback).filter(Feedback.id == feedback_id).first()
+    if not fb:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    
+    fb.status = "resolved"
+    fb.resolved_at = datetime.utcnow()
+    db.commit()
+    db.refresh(fb)
+    return fb
+
+
+@app.get("/landlord/stats")
+def get_landlord_stats(db: Session = Depends(getdb)):
+    total_properties = db.query(dbproperty).count()
+    total_beds = db.query(dbbed).count()
+    occupied_beds = db.query(dbbed).filter(dbbed.status == "occupied").count()
+    occupancy_rate = (occupied_beds / total_beds * 100) if total_beds > 0 else 0.0
+    
+    pending_payments = db.query(dbrentpayment).filter(dbrentpayment.payment_status == "pending").all()
+    total_pending_dues = sum(float(p.amount) for p in pending_payments)
+    
+    total_complaints = db.query(Feedback).count()
+    pending_complaints = db.query(Feedback).filter(Feedback.status == "in_progress").count()
+    
+    return {
+        "total_properties": total_properties,
+        "total_beds": total_beds,
+        "occupied_beds": occupied_beds,
+        "occupancy_rate": round(occupancy_rate, 2),
+        "total_pending_dues": total_pending_dues,
+        "total_complaints": total_complaints,
+        "pending_complaints": pending_complaints
+    }
