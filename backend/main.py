@@ -16,6 +16,12 @@ from dbmodels import Visitor as dbvisitor
 from dbmodels import Feedback
 
 app=FastAPI()
+@app.get("/")
+def home():
+    return {
+        "message": "Tenant Management API is running!",
+        "docs": "/docs"
+    }
 
 # Configure CORS
 app.add_middleware(
