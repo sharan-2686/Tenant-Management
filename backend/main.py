@@ -73,6 +73,9 @@ class RentPayRequest(BaseModel):
     payment_method: str
     transaction_reference: Optional[str] = None
     paid_date: Optional[date] = None
+    tenant_id: Optional[int] = None
+    amount: Optional[float] = None
+    billing_period: Optional[str] = None
 
 
 class RentGenerationRequest(BaseModel):
@@ -278,6 +281,24 @@ def add_visitor(vis: VisitorCreate, db: Session = Depends(getdb)):
    db.commit()
    db.refresh(new_visitor)
    return new_visitor
+
+
+@app.get("/visitors/tenant/{tenant_id}")
+def get_tenant_visitors(tenant_id: int, db: Session = Depends(getdb)):
+    visitors = db.query(dbvisitor).filter(dbvisitor.tenant_id == tenant_id).order_by(dbvisitor.entry_time.desc()).all()
+    result = []
+    for v in visitors:
+        result.append({
+            "id": v.id,
+            "tenant_id": v.tenant_id,
+            "visitor_name": v.visitor_name,
+            "visitor_phone": v.visitor_phone,
+            "purpose": v.purpose,
+            "entry_time": v.entry_time,
+            "exit_time": v.exit_time,
+            "status": v.status
+        })
+    return result
 
 @app.post("/add-feedback")
 def add_feedback(feedback: FeedbackCreate, db: Session = Depends(getdb)):
@@ -485,6 +506,41 @@ def get_tenant_rent_history(tenant_id: int, db: Session = Depends(getdb)):
 
 @app.post("/rent/pay/{payment_id}")
 def pay_rent(payment_id: int, req: RentPayRequest, db: Session = Depends(getdb)):
+    if payment_id == 0:
+        if not req.tenant_id:
+            raise HTTPException(status_code=400, detail="tenant_id is required for new rent payment")
+
+        tenant = db.query(dbtenant).filter(dbtenant.id == req.tenant_id).first()
+        if not tenant:
+            raise HTTPException(status_code=404, detail="Tenant not found")
+
+        paid_date = req.paid_date or date.today()
+        due_month = paid_date.month + 1
+        due_year = paid_date.year + (due_month - 1) // 12
+        due_month = (due_month - 1) % 12 + 1
+        due_day = min(paid_date.day, 28)
+        due_date = date(due_year, due_month, due_day)
+
+        amount = req.amount if req.amount is not None else 9500.0
+        billing_period = req.billing_period or paid_date.strftime("%b %Y")
+
+        payment = dbrentpayment(
+            tenant_id=req.tenant_id,
+            amount=amount,
+            due_date=due_date,
+            payment_status="paid",
+            paid_date=paid_date,
+            payment_method=req.payment_method,
+            receipt_number=req.transaction_reference or f"REC-NEW-{int(datetime.utcnow().timestamp())}",
+            billing_period=billing_period,
+            late_fee=0.0,
+        )
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+
+        return make_rent_payment_response(payment, db, paid_date)
+
     payment = db.query(dbrentpayment).filter(dbrentpayment.id == payment_id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Rent payment not found")
