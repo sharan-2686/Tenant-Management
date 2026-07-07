@@ -1776,59 +1776,9 @@
             <div class="panel-head">
               <h3>Recent activity</h3>
             </div>
-
-            <div class="feed-item">
-              <div class="feed-icon" style="background:var(--amber-bg); color:var(--amber);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-              </div>
-              <div class="feed-text">
-                <div class="t1">July rent bill generated — due in 3 days</div>
-                <div class="t2">02 JUL 2026, 9:00 AM</div>
-              </div>
-            </div>
-
-            <div class="feed-item">
-              <div class="feed-icon" style="background:var(--blue-bg); color:var(--blue);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                </svg>
-              </div>
-              <div class="feed-text">
-                <div class="t1">Visitor "Rahul Menon" checked in</div>
-                <div class="t2">29 JUN 2026, 6:40 PM</div>
-              </div>
-            </div>
-
-            <div class="feed-item">
-              <div class="feed-icon" style="background:var(--primary-100); color:var(--primary-700);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 6 9 17l-5-5" />
-                </svg>
-              </div>
-              <div class="feed-text">
-                <div class="t1">ID card document approved</div>
-                <div class="t2">22 JUN 2026, 11:15 AM</div>
-              </div>
-            </div>
-
-            <div class="feed-item">
-              <div class="feed-icon" style="background:var(--violet-bg); color:var(--violet);">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-              </div>
-              <div class="feed-text">
-                <div class="t1">Complaint "Water heater not working" resolved</div>
-                <div class="t2">18 JUN 2026, 4:05 PM</div>
+            <div id="dashboard-activity-feed">
+              <div class="empty-state" style="padding: 20px 0; color: var(--ink-400);">
+                <div class="e1">Loading activities...</div>
               </div>
             </div>
           </div>
@@ -2207,6 +2157,147 @@
       : 'https://tenant-management-o5p9.onrender.com';
     const RENT_AMOUNT = 9500;
     let rentHistory = [];
+
+    let activityItems = {
+      rent: [],
+      visitors: [],
+      feedback: [],
+      kyc: []
+    };
+
+    function updateActivityFeed(category, items) {
+      activityItems[category] = items;
+      renderActivityFeed();
+    }
+
+    function renderActivityFeed() {
+      const feedContainer = document.getElementById('dashboard-activity-feed');
+      if (!feedContainer) return;
+
+      let allActivities = [];
+
+      // Add rent activities
+      if (activityItems.rent && activityItems.rent.length > 0) {
+        activityItems.rent.forEach(p => {
+          const date = p.paid_date ? new Date(p.paid_date) : (p.due_date ? new Date(p.due_date) : new Date(p.created_at || Date.now()));
+          const timeStr = date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+          
+          if (p.payment_status === 'paid') {
+            allActivities.push({
+              title: `Rent paid for ${p.billing_period || 'billing period'} via ${p.payment_method || 'Razorpay'}`,
+              timestamp: date.getTime(),
+              timeLabel: timeStr,
+              iconColor: 'var(--primary-100)',
+              textColor: 'var(--primary-700)',
+              iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+            });
+          } else {
+            allActivities.push({
+              title: `Rent bill generated for ${p.billing_period || 'billing period'} — pending`,
+              timestamp: date.getTime(),
+              timeLabel: timeStr,
+              iconColor: 'var(--amber-bg)',
+              textColor: 'var(--amber)',
+              iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+            });
+          }
+        });
+      }
+
+      // Add visitor activities
+      if (activityItems.visitors && activityItems.visitors.length > 0) {
+        activityItems.visitors.forEach(v => {
+          const date = v.entry_time ? new Date(v.entry_time) : new Date();
+          const timeStr = date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+          allActivities.push({
+            title: `Visitor "${v.visitor_name}" checked in`,
+            timestamp: date.getTime(),
+            timeLabel: timeStr,
+            iconColor: 'var(--blue-bg)',
+            textColor: 'var(--blue)',
+            iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`
+          });
+          if (v.exit_time) {
+            const exitDate = new Date(v.exit_time);
+            const exitTimeStr = exitDate.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true });
+            allActivities.push({
+              title: `Visitor "${v.visitor_name}" checked out`,
+              timestamp: exitDate.getTime(),
+              timeLabel: exitTimeStr,
+              iconColor: 'var(--surface-alt)',
+              textColor: 'var(--ink-600)',
+              iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`
+            });
+          }
+        });
+      }
+
+      // Add feedback activities
+      if (activityItems.feedback && activityItems.feedback.length > 0) {
+        activityItems.feedback.forEach(fb => {
+          const date = fb.created_at ? new Date(fb.created_at) : new Date();
+          const timeStr = date.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+          allActivities.push({
+            title: `Complaint "${fb.title}" raised`,
+            timestamp: date.getTime(),
+            timeLabel: timeStr,
+            iconColor: 'var(--red-bg)',
+            textColor: 'var(--red)',
+            iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
+          });
+          if (fb.resolved_at) {
+            const resDate = new Date(fb.resolved_at);
+            const resTimeStr = resDate.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            allActivities.push({
+              title: `Complaint "${fb.title}" resolved`,
+              timestamp: resDate.getTime(),
+              timeLabel: resTimeStr,
+              iconColor: 'var(--violet-bg)',
+              textColor: 'var(--violet)',
+              iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`
+            });
+          }
+        });
+      }
+
+      // Add KYC activities
+      if (activityItems.kyc && activityItems.kyc.length > 0) {
+        activityItems.kyc.forEach(k => {
+          allActivities.push(k);
+        });
+      }
+
+      // Sort by timestamp descending
+      allActivities.sort((a, b) => b.timestamp - a.timestamp);
+
+      feedContainer.innerHTML = '';
+      const topActivities = allActivities.slice(0, 4);
+
+      if (topActivities.length === 0) {
+        feedContainer.innerHTML = `
+          <div class="empty-state" style="padding: 20px 0; color: var(--ink-400);">
+            <div class="e1">No recent activity</div>
+          </div>
+        `;
+        return;
+      }
+
+      topActivities.forEach(act => {
+        const item = document.createElement('div');
+        item.className = 'feed-item';
+        item.innerHTML = `
+          <div class="feed-icon" style="background:${act.iconColor}; color:${act.textColor};">
+            ${act.iconSvg}
+          </div>
+          <div class="feed-text">
+            <div class="t1">${act.title}</div>
+            <div class="t2">${act.timeLabel}</div>
+          </div>
+        `;
+        feedContainer.appendChild(item);
+      });
+    }
+
 
     document.getElementById('topbar-eyebrow').textContent = titles.dashboard.eyebrow;
     document.getElementById('topbar-title').textContent = titles.dashboard.title;
@@ -2617,6 +2708,7 @@
           const keycardNext = document.getElementById('keycard-next-due');
           if (keycardNext) keycardNext.textContent = hasPaidHistory ? '—' : nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
         } catch (e) { }
+        updateActivityFeed('rent', payments || []);
       } catch (err) {
         console.error('Error fetching rent data', err);
       }
@@ -2768,6 +2860,7 @@
         `;
           tbody.appendChild(row);
         });
+        updateActivityFeed('visitors', items || []);
       } catch (err) {
         console.error('Error refreshing visitors', err);
       }
@@ -2861,6 +2954,28 @@
         const kycFoot = document.querySelector('#tab-dashboard .stat-card.c-green .stat-foot .pill');
         if (kycStat) kycStat.textContent = statusLabel;
         if (kycFoot) kycFoot.textContent = pillLabel;
+
+        let kycEvent = [];
+        if (tenant.status === 'verified') {
+          kycEvent.push({
+            title: 'KYC status verified - All docs approved',
+            timestamp: new Date().getTime() - 1000,
+            timeLabel: 'Verified',
+            iconColor: 'var(--primary-100)',
+            textColor: 'var(--primary-700)',
+            iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`
+          });
+        } else if (tenant.status === 'under_review') {
+          kycEvent.push({
+            title: 'KYC documents submitted — Under review',
+            timestamp: new Date().getTime() - 1000,
+            timeLabel: 'Under Review',
+            iconColor: 'var(--blue-bg)',
+            textColor: 'var(--blue)',
+            iconSvg: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`
+          });
+        }
+        updateActivityFeed('kyc', kycEvent);
       } catch (err) {
         console.error('KYC refresh failed', err);
       }
@@ -2899,6 +3014,7 @@
         `;
           tbody.appendChild(row);
         });
+        updateActivityFeed('feedback', items || []);
       } catch (err) {
         console.error('Error refreshing feedback', err);
       }
