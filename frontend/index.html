@@ -50,6 +50,7 @@
     color:var(--ink-900);
     display:flex;
     min-height:100vh;
+    overflow-x:hidden;
     -webkit-font-smoothing:antialiased;
   }
 
@@ -239,6 +240,16 @@
     flex-direction: column;
     gap: 8px;
     margin-bottom: 16px;
+  }
+
+  .auth-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .auth-field.full {
+    grid-column: 1 / -1;
   }
 
   .auth-field label {
@@ -640,12 +651,44 @@
   .empty-state .e2{font-size:12px; margin-top:3px;}
 
   @media (max-width: 980px){
+    body{flex-direction:column;}
+    .sidebar{display:none;}
+    .main{display:flex;}
     .hero-row{grid-template-columns:1fr;}
     .two-col{grid-template-columns:1fr;}
-    .stat-grid-4{grid-template-columns:repeat(2,1fr);}
-    .doc-grid{grid-template-columns:1fr;}
+    .stat-grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .doc-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
     .profile-grid{grid-template-columns:1fr;}
     .form-grid{grid-template-columns:1fr;}
+    .topbar{padding:16px 20px;}
+    .content{padding:20px 20px 40px;}
+    .keycard-mid{gap:18px; flex-wrap:wrap;}
+    .quick-row{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .table-wrap{overflow-x:auto;}
+  }
+
+  @media (max-width: 640px){
+    #login-screen{padding:12px;}
+    .login-card{padding:24px 18px; border-radius:22px; max-height:calc(100vh - 24px); overflow:auto;}
+    .auth-tab-row{gap:8px;}
+    .auth-fields-grid{grid-template-columns:1fr; gap:12px;}
+    .auth-field{margin-bottom:14px;}
+    .login-title{font-size:20px;}
+    .login-sub{font-size:13px; margin-bottom:18px;}
+    .topbar{flex-direction:column; align-items:flex-start; gap:10px;}
+    .topbar-actions{width:100%; justify-content:flex-end; flex-wrap:wrap;}
+    .topbar h1{font-size:20px;}
+    .content{padding:16px 14px 32px;}
+    .panel, .form-panel, .profile-card, .doc-card, .stat-card{padding:16px;}
+    .keycard{padding:18px; min-height:auto;}
+    .keycard-mid{flex-direction:column; gap:12px;}
+    .keycard-bottom{flex-direction:column; align-items:flex-start; gap:10px;}
+    .quick-row{grid-template-columns:1fr;}
+    .doc-grid{grid-template-columns:1fr;}
+    .stat-grid-4{grid-template-columns:1fr;}
+    .section-title{flex-direction:column; align-items:flex-start; gap:6px;}
+    .btn{width:100%; justify-content:center;}
+    .btn-sm{padding:8px 12px;}
   }
 </style>
 </head>
@@ -659,14 +702,16 @@
     </div>
     <div id="login-form" class="auth-form">
       <div class="login-title">Tenant sign in</div>
-      <div class="login-sub">Enter your email and password to access the tenant dashboard.</div>
-      <div class="auth-field">
-        <label for="login-email">Email</label>
-        <input type="email" id="login-email" placeholder="you@example.com">
-      </div>
-      <div class="auth-field">
-        <label for="login-password">Password</label>
-        <input type="password" id="login-password" placeholder="••••••••">
+      <div class="login-sub">Use your email and password to access the tenant dashboard.</div>
+      <div class="auth-fields-grid">
+        <div class="auth-field full">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com">
+        </div>
+        <div class="auth-field full">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="••••••••">
+        </div>
       </div>
       <button class="btn btn-primary btn-sm auth-btn" onclick="loginUser()">Log in</button>
       <div id="login-status" class="auth-status"></div>
@@ -674,30 +719,44 @@
     <div id="register-form" class="auth-form hidden">
       <div class="login-title">Create tenant account</div>
       <div class="login-sub">Register first, then upload KYC documents and manage rent.</div>
-      <div class="auth-field">
-        <label for="reg-full-name">Full name</label>
-        <input type="text" id="reg-full-name" placeholder="Ananya Rao">
-      </div>
-      <div class="auth-field">
-        <label for="reg-email">Email</label>
-        <input type="email" id="reg-email" placeholder="you@example.com">
-      </div>
-      <div class="auth-field">
-        <label for="reg-phone">Phone</label>
-        <input type="tel" id="reg-phone" placeholder="+91 98xxxxxxxx">
-      </div>
-      <div class="auth-field">
-        <label for="reg-password">Password</label>
-        <input type="password" id="reg-password" placeholder="••••••••">
-      </div>
-      <div class="auth-field">
-        <label for="reg-gender">Gender</label>
-        <select id="reg-gender">
-          <option value="">Select gender</option>
-          <option value="Female">Female</option>
-          <option value="Male">Male</option>
-          <option value="Other">Other</option>
-        </select>
+      <div class="auth-fields-grid">
+        <div class="auth-field">
+          <label for="reg-full-name">Full name</label>
+          <input type="text" id="reg-full-name" placeholder="Ananya Rao">
+        </div>
+        <div class="auth-field">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" placeholder="you@example.com">
+        </div>
+        <div class="auth-field">
+          <label for="reg-phone">Phone</label>
+          <input type="tel" id="reg-phone" placeholder="+91 98xxxxxxxx">
+        </div>
+        <div class="auth-field">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" placeholder="••••••••">
+        </div>
+        <div class="auth-field">
+          <label for="reg-gender">Gender</label>
+          <select id="reg-gender">
+            <option value="">Select gender</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="auth-field">
+          <label for="reg-common-id">Common PG ID</label>
+          <input type="text" id="reg-common-id" placeholder="Enter common ID">
+        </div>
+        <div class="auth-field">
+          <label for="reg-aadhaar">Aadhaar number</label>
+          <input type="text" id="reg-aadhaar" placeholder="1234 5678 9012">
+        </div>
+        <div class="auth-field">
+          <label for="reg-pan">PAN number</label>
+          <input type="text" id="reg-pan" placeholder="ABCDE1234F">
+        </div>
       </div>
       <button class="btn btn-primary btn-sm auth-btn" onclick="registerUser()">Create account</button>
       <div id="register-status" class="auth-status"></div>
@@ -755,7 +814,7 @@
     <div class="avatar-sm">AR</div>
     <div class="who">
       <div class="n">Ananya Rao</div>
-      <div class="r">Room 204 · Bed B</div>
+      <div class="r" id="sidebar-room-badge">Room — · Bed —</div>
     </div>
   </div>
 </aside>
@@ -792,9 +851,9 @@
             <div class="keycard-status"><span class="pulse"></span>Checked In</div>
           </div>
           <div class="keycard-mid">
-            <div class="keycard-field"><div class="l">Room</div><div class="v">204</div></div>
-            <div class="keycard-field"><div class="l">Bed</div><div class="v">B</div></div>
-            <div class="keycard-field"><div class="l">Floor</div><div class="v">2nd</div></div>
+            <div class="keycard-field"><div class="l">Room</div><div class="v" id="keycard-room">—</div></div>
+            <div class="keycard-field"><div class="l">Bed</div><div class="v" id="keycard-bed">—</div></div>
+            <div class="keycard-field"><div class="l">Floor</div><div class="v" id="keycard-floor">—</div></div>
           </div>
           <div class="keycard-bottom">
             <div>
@@ -1164,12 +1223,12 @@
         <div class="profile-card">
           <div class="profile-avatar">AR</div>
           <div class="p-name" id="profile-name">Ananya Rao</div>
-          <div class="p-role" id="profile-role">Tenant · Room 204, Bed B</div>
-          <button class="btn btn-outline btn-sm" style="width:100%; justify-content:center;">Edit profile</button>
+          <div class="p-role" id="profile-role">Tenant · Room —, Bed —</div>
+          <button class="btn btn-outline btn-sm" style="width:100%; justify-content:center;" onclick="toggleProfileEdit()">Edit profile</button>
         </div>
 
-        <div class="panel">
-          <div class="panel-head"><h3>Tenant onboarding</h3></div>
+        <div class="panel" id="profile-edit-panel">
+          <div class="panel-head"><h3>Edit profile</h3></div>
           <div class="form-grid">
             <div class="field full">
               <label for="tenant-name">Full name</label>
@@ -1192,8 +1251,32 @@
                 <option value="Other">Other</option>
               </select>
             </div>
+            <div class="field full">
+              <label for="tenant-common-id">Common PG ID</label>
+              <input type="text" id="tenant-common-id" placeholder="Enter common ID">
+            </div>
+            <div class="field full">
+              <label for="tenant-aadhaar">Aadhaar number</label>
+              <input type="text" id="tenant-aadhaar" placeholder="1234 5678 9012">
+            </div>
+            <div class="field full">
+              <label for="tenant-pan">PAN number</label>
+              <input type="text" id="tenant-pan" placeholder="ABCDE1234F">
+            </div>
+            <div class="field full">
+              <label for="tenant-address">Address</label>
+              <input type="text" id="tenant-address" placeholder="Enter address">
+            </div>
+            <div class="field full">
+              <label for="tenant-emergency-name">Emergency contact name</label>
+              <input type="text" id="tenant-emergency-name" placeholder="Emergency contact name">
+            </div>
+            <div class="field full">
+              <label for="tenant-emergency-phone">Emergency contact phone</label>
+              <input type="tel" id="tenant-emergency-phone" placeholder="+91 98xxxxxxxx">
+            </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="createTenant()">Create tenant record</button>
+          <button class="btn btn-primary btn-sm" onclick="saveProfileChanges()">Save profile</button>
           <div id="tenant-create-status" class="info-row" style="margin-top:16px; color:var(--ink-600);"></div>
         </div>
 
@@ -1232,7 +1315,11 @@
   let currentTenantId = null;
   let currentUser = null;
   let currentLoginDate = null;
-  const API_BASE = 'http://127.0.0.1:8000';
+  let currentTenantDetails = null;
+  let isProfileEditOpen = false;
+  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+    ? 'http://127.0.0.1:8000'
+    : 'https://tenant-management-o5p9.onrender.com';
   const RENT_AMOUNT = 9500;
   let rentHistory = [];
 
@@ -1265,10 +1352,23 @@
     document.getElementById('login-screen').style.display = 'none';
     updateUserDisplay();
     if (currentTenantId) {
+      refreshTenantDetails();
       refreshRentData();
       refreshKycStatus();
       refreshFeedbackHistory();
       refreshVisitorHistory();
+    }
+  }
+
+  function toggleProfileEdit() {
+    isProfileEditOpen = !isProfileEditOpen;
+    const panel = document.getElementById('profile-edit-panel');
+    if (panel) {
+      panel.style.display = isProfileEditOpen ? 'block' : 'none';
+    }
+    const button = document.querySelector('#tab-profile .btn-outline');
+    if (button) {
+      button.textContent = isProfileEditOpen ? 'Cancel edit' : 'Edit profile';
     }
   }
 
@@ -1292,6 +1392,12 @@
     if (profileAvatarEl) profileAvatarEl.textContent = initials;
     const detailFullNameEl = document.getElementById('detail-full-name');
     if (detailFullNameEl) detailFullNameEl.textContent = name;
+    const detailEmailEl = document.getElementById('detail-email');
+    const detailPhoneEl = document.getElementById('detail-phone');
+    const detailGenderEl = document.getElementById('detail-gender');
+    if (detailEmailEl) detailEmailEl.textContent = currentTenantDetails?.email || currentUser?.email || '—';
+    if (detailPhoneEl) detailPhoneEl.textContent = currentTenantDetails?.phone || currentUser?.phone || '—';
+    if (detailGenderEl) detailGenderEl.textContent = currentTenantDetails?.gender || '—';
     // Resident since / check-in date from login timestamp
     const sinceEl = document.getElementById('keycard-since');
     const checkinEl = document.getElementById('detail-checkin');
@@ -1299,6 +1405,93 @@
     const fmt = baseDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
     if (sinceEl) sinceEl.textContent = `RESIDENT SINCE ${fmt}`;
     if (checkinEl) checkinEl.textContent = fmt;
+  }
+
+  async function refreshTenantDetails() {
+    if (!currentTenantId) return;
+    try {
+      const res = await fetch(`${API_BASE}/tenants/${currentTenantId}`);
+      if (!res.ok) throw new Error('Unable to fetch tenant details');
+      currentTenantDetails = await res.json();
+      const roomBadge = document.getElementById('sidebar-room-badge');
+      const profileRole = document.getElementById('profile-role');
+      const keycardRoom = document.getElementById('keycard-room');
+      const keycardBed = document.getElementById('keycard-bed');
+      const keycardFloor = document.getElementById('keycard-floor');
+      const roomNumber = currentTenantDetails?.room_number;
+      const bedNumber = currentTenantDetails?.bed_number;
+      const roomLabel = roomNumber ? `${roomNumber}` : 'Not assigned';
+      const bedLabel = bedNumber ? `${bedNumber}` : 'Not assigned';
+      const floorLabel = roomNumber ? `${roomNumber}` : '—';
+      if (roomBadge) roomBadge.textContent = roomNumber || bedNumber ? `Room ${roomLabel} · Bed ${bedLabel}` : 'Room not assigned';
+      if (profileRole) profileRole.textContent = roomNumber || bedNumber ? `Tenant · Room ${roomLabel}, Bed ${bedLabel}` : 'Tenant · Room not assigned';
+      if (keycardRoom) keycardRoom.textContent = roomNumber ? roomLabel : '—';
+      if (keycardBed) keycardBed.textContent = bedNumber ? bedLabel : '—';
+      if (keycardFloor) keycardFloor.textContent = roomNumber ? floorLabel : '—';
+
+      const tenantName = document.getElementById('tenant-name');
+      const tenantEmail = document.getElementById('tenant-email');
+      const tenantPhone = document.getElementById('tenant-phone');
+      const tenantGender = document.getElementById('tenant-gender');
+      const tenantCommonId = document.getElementById('tenant-common-id');
+      const tenantAadhaar = document.getElementById('tenant-aadhaar');
+      const tenantPan = document.getElementById('tenant-pan');
+      const tenantAddress = document.getElementById('tenant-address');
+      const tenantEmergencyName = document.getElementById('tenant-emergency-name');
+      const tenantEmergencyPhone = document.getElementById('tenant-emergency-phone');
+      if (tenantName) tenantName.value = currentTenantDetails?.full_name || '';
+      if (tenantEmail) tenantEmail.value = currentTenantDetails?.email || '';
+      if (tenantPhone) tenantPhone.value = currentTenantDetails?.phone || '';
+      if (tenantGender) tenantGender.value = currentTenantDetails?.gender || '';
+      if (tenantCommonId) tenantCommonId.value = currentTenantDetails?.common_id || '';
+      if (tenantAadhaar) tenantAadhaar.value = currentTenantDetails?.aadhaar_number || '';
+      if (tenantPan) tenantPan.value = currentTenantDetails?.pan_number || '';
+      if (tenantAddress) tenantAddress.value = currentTenantDetails?.address || '';
+      if (tenantEmergencyName) tenantEmergencyName.value = currentTenantDetails?.emergency_contact_name || '';
+      if (tenantEmergencyPhone) tenantEmergencyPhone.value = currentTenantDetails?.emergency_contact_phone || '';
+      updateUserDisplay();
+    } catch (err) {
+      console.error('Error fetching tenant details', err);
+    }
+  }
+
+  async function saveProfileChanges() {
+    if (!currentTenantId) {
+      alert('Please login first.');
+      return;
+    }
+
+    const statusEl = document.getElementById('tenant-create-status');
+    const payload = {
+      full_name: document.getElementById('tenant-name').value.trim(),
+      email: document.getElementById('tenant-email').value.trim(),
+      phone: document.getElementById('tenant-phone').value.trim(),
+      gender: document.getElementById('tenant-gender').value,
+      common_id: document.getElementById('tenant-common-id').value.trim(),
+      aadhaar_number: document.getElementById('tenant-aadhaar').value.trim(),
+      pan_number: document.getElementById('tenant-pan').value.trim(),
+      address: document.getElementById('tenant-address').value.trim(),
+      emergency_contact_name: document.getElementById('tenant-emergency-name').value.trim(),
+      emergency_contact_phone: document.getElementById('tenant-emergency-phone').value.trim(),
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/update-tenant/${currentTenantId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) {
+        const result = await res.json().catch(() => null);
+        throw new Error(result?.detail || result?.error || 'Profile update failed');
+      }
+      statusEl.textContent = 'Profile updated successfully.';
+      await refreshTenantDetails();
+      toggleProfileEdit();
+    } catch (err) {
+      console.error(err);
+      if (statusEl) statusEl.textContent = err.message || 'Profile update failed.';
+    }
   }
 
   async function loginUser() {
@@ -1343,10 +1536,13 @@
     const phone = document.getElementById('reg-phone').value.trim();
     const password = document.getElementById('reg-password').value.trim();
     const gender = document.getElementById('reg-gender').value;
+    const commonId = document.getElementById('reg-common-id').value.trim();
+    const aadhaarNumber = document.getElementById('reg-aadhaar').value.trim();
+    const panNumber = document.getElementById('reg-pan').value.trim();
     const status = document.getElementById('register-status');
 
     if (!fullName || !email || !phone || !password) {
-      status.textContent = 'All fields are required for registration.';
+      status.textContent = 'All required fields are needed for registration.';
       return;
     }
 
@@ -1367,7 +1563,7 @@
       const tenantRes = await fetch(`${API_BASE}/add-tenant`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, email, phone, gender })
+        body: JSON.stringify({ full_name: fullName, email, phone, gender, common_id: commonId, aadhaar_number: aadhaarNumber, pan_number: panNumber })
       });
 
       if (!tenantRes.ok) {
@@ -1377,8 +1573,21 @@
       }
 
       const tenantData = await tenantRes.json();
-      currentUser = { user_id: data.id, full_name: fullName, email, phone, role: 'tenant', tenant_id: tenantData.id };
-      currentTenantId = tenantData.id;
+      const loginRes = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        currentUser = loginData;
+        currentTenantId = loginData.tenant_id || tenantData.id;
+      } else {
+        currentUser = { user_id: data.id, full_name: fullName, email, phone, role: 'tenant', tenant_id: tenantData.id };
+        currentTenantId = tenantData.id;
+      }
+
       currentLoginDate = new Date();
       status.textContent = 'Account created successfully. Redirecting...';
       showApp();

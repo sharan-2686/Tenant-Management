@@ -1,8 +1,10 @@
 from fastapi import FastAPI,Depends,UploadFile,File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from db import engine,SessionLocal
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from dbmodels import Tenant as dbtenant
 from dbmodels import TenantStay, Room as dbroom, RentPayment as dbrentpayment, Property as dbproperty, User as dbuser, Bed as dbbed
 import asyncio
@@ -16,6 +18,10 @@ from dbmodels import Visitor as dbvisitor
 from dbmodels import Feedback
 
 app=FastAPI()
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
 @app.get("/")
 def home():
     return {
@@ -37,7 +43,7 @@ class TenantCreate(BaseModel):
  email: Optional[str] = None
  phone: Optional[str] = None
  gender: Optional[str] = None
-
+ common_id: Optional[str] = None
 
  aadhaar_number: Optional[str] = None
  pan_number: Optional[str] = None
@@ -52,6 +58,7 @@ class TenantUpdate(BaseModel):
  email: Optional[str] = None
  phone: Optional[str] = None
  gender: Optional[str] = None
+ common_id: Optional[str] = None
  aadhaar_number: Optional[str] = None
  pan_number: Optional[str] = None
 
@@ -119,8 +126,11 @@ class UserRegister(BaseModel):
     role: str # tenant, landlord, admin
 
 class UserLogin(BaseModel):
-    email: str
-    password: str
+    email: Optional[str] = None
+    password: Optional[str] = None
+    common_id: Optional[str] = None
+    aadhaar_number: Optional[str] = None
+    pan_number: Optional[str] = None
 
 def getdb():
    db=SessionLocal()
@@ -132,8 +142,34 @@ def getdb():
 def add_tenant(ten:TenantCreate,db:Session =Depends(getdb)):
       data=ten.model_dump()
       data.pop("status", None)
+
+      if data.get("common_id"):
+          existing_tenant = db.query(dbtenant).filter(dbtenant.common_id == data["common_id"]).first()
+          if existing_tenant:
+              existing_tenant.full_name = data.get("full_name", existing_tenant.full_name)
+              existing_tenant.email = data.get("email") or existing_tenant.email
+              existing_tenant.phone = data.get("phone") or existing_tenant.phone
+              existing_tenant.gender = data.get("gender") or existing_tenant.gender
+              existing_tenant.aadhaar_number = data.get("aadhaar_number") or existing_tenant.aadhaar_number
+              existing_tenant.pan_number = data.get("pan_number") or existing_tenant.pan_number
+              db.commit()
+              db.refresh(existing_tenant)
+              return existing_tenant
+
+      if data.get("email"):
+          existing_tenant = db.query(dbtenant).filter(dbtenant.email == data["email"]).first()
+          if existing_tenant:
+              existing_tenant.full_name = data.get("full_name", existing_tenant.full_name)
+              existing_tenant.phone = data.get("phone") or existing_tenant.phone
+              existing_tenant.gender = data.get("gender") or existing_tenant.gender
+              existing_tenant.common_id = data.get("common_id") or existing_tenant.common_id
+              existing_tenant.aadhaar_number = data.get("aadhaar_number") or existing_tenant.aadhaar_number
+              existing_tenant.pan_number = data.get("pan_number") or existing_tenant.pan_number
+              db.commit()
+              db.refresh(existing_tenant)
+              return existing_tenant
+
       new_tenant = dbtenant(**data)
-  
       db.add(new_tenant)
       db.commit()
       db.refresh(new_tenant)
@@ -152,6 +188,7 @@ def update_tenant(id: int, ten: TenantUpdate, db: Session = Depends(getdb)):
     target_tenant.email = data.get("email", target_tenant.email)
     target_tenant.phone = data.get("phone", target_tenant.phone)
     target_tenant.gender = data.get("gender", target_tenant.gender)
+    target_tenant.common_id = data.get("common_id", target_tenant.common_id)
 
     target_tenant.aadhaar_number = data.get("aadhaar_number", target_tenant.aadhaar_number)
     target_tenant.pan_number = data.get("pan_number", target_tenant.pan_number)
@@ -165,6 +202,29 @@ def update_tenant(id: int, ten: TenantUpdate, db: Session = Depends(getdb)):
     db.refresh(target_tenant)
 
     return target_tenant
+def store_document(file_obj: UploadFile, tenant_id: int, doc_type: str) -> str:
+    file_obj.file.seek(0)
+    content = file_obj.file.read()
+    file_obj.file.seek(0)
+
+    safe_name = f"{doc_type}_{tenant_id}_{os.path.basename(file_obj.filename or f'{doc_type}.pdf')}"
+    safe_name = safe_name.replace(" ", "_")
+
+    try:
+        supabase.storage.from_("kyc-documents").upload(
+            safe_name,
+            content,
+            {"content-type": "application/pdf"}
+        )
+        return supabase.storage.from_("kyc-documents").get_public_url(safe_name)
+    except Exception as exc:
+        local_path = os.path.join(UPLOAD_DIR, safe_name)
+        with open(local_path, "wb") as handle:
+            handle.write(content)
+        print(f"Falling back to local storage for {safe_name}: {exc}")
+        return f"/uploads/{safe_name}"
+
+
 @app.post("/upload-kyc/{tenant_id}")
 def upload_kyc(
     tenant_id: int,
@@ -179,48 +239,26 @@ def upload_kyc(
     if not tenant:
         return {"error": "Tenant not found"}
 
-    # ---------- Aadhaar Upload ----------
-    aadhaar_name = f"aadhaar_{tenant_id}_{aadhaar_pdf.filename}"
-    supabase.storage.from_("kyc-documents").upload(
-        aadhaar_name,
-        aadhaar_pdf.file.read(),
-        {"content-type": "application/pdf"}
-    )
-    aadhaar_url = supabase.storage.from_("kyc-documents").get_public_url(aadhaar_name)
+    try:
+        aadhaar_url = store_document(aadhaar_pdf, tenant_id, "aadhaar")
+        pan_url = store_document(pan_pdf, tenant_id, "pan")
+        id_url = store_document(id_card_pdf, tenant_id, "id")
 
-    # ---------- PAN Upload ----------
-    pan_name = f"pan_{tenant_id}_{pan_pdf.filename}"
-    supabase.storage.from_("kyc-documents").upload(
-        pan_name,
-        pan_pdf.file.read(),
-        {"content-type": "application/pdf"}
-    )
-    pan_url = supabase.storage.from_("kyc-documents").get_public_url(pan_name)
+        tenant.aadhaar_pdf_url = aadhaar_url
+        tenant.pan_pdf_url = pan_url
+        tenant.id_card_pdf_url = id_url
+        tenant.status = "under_review"
+        db.commit()
+        db.refresh(tenant)
 
-    # ---------- ID Card Upload ----------
-    id_name = f"id_{tenant_id}_{id_card_pdf.filename}"
-    supabase.storage.from_("kyc-documents").upload(
-        id_name,
-        id_card_pdf.file.read(),
-        {"content-type": "application/pdf"}
-    )
-    id_url = supabase.storage.from_("kyc-documents").get_public_url(id_name)
-
-    # ---------- Save URLs in DB ----------
-    tenant.aadhaar_pdf_url = aadhaar_url
-    tenant.pan_pdf_url = pan_url
-    tenant.id_card_pdf_url = id_url
-
-    tenant.status = "under_review"
-    db.commit()
-    db.refresh(tenant)
-
-    return {
-        "message": "KYC uploaded successfully",
-        "aadhaar": aadhaar_url,
-        "pan": pan_url,
-        "id_card": id_url
-    }
+        return {
+            "message": "KYC uploaded successfully",
+            "aadhaar": aadhaar_url,
+            "pan": pan_url,
+            "id_card": id_url
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"KYC upload failed: {str(exc)}") from exc
 @app.post("/checkin/{tenant_id}")
 def checkin_tenant(
     tenant_id: int,
@@ -737,14 +775,32 @@ def verify_razorpay_payment(req: RentVerifyRequest, db: Session = Depends(getdb)
 
 @app.post("/register")
 def register_user(user: UserRegister, db: Session = Depends(getdb)):
-    existing = db.query(dbuser).filter((dbuser.email == user.email) | (dbuser.phone == user.phone)).first()
+    normalized_email = (user.email or "").strip().lower()
+    normalized_phone = (user.phone or "").strip()
+
+    if not normalized_email or not normalized_phone:
+        raise HTTPException(status_code=400, detail="Email and phone are required")
+
+    existing = db.query(dbuser).filter(dbuser.email == normalized_email).first()
+    if not existing:
+        existing = db.query(dbuser).filter(dbuser.phone == normalized_phone).first()
+
     if existing:
-        raise HTTPException(status_code=400, detail="Email or phone already registered")
+        existing.full_name = user.full_name.strip() or existing.full_name
+        existing.email = normalized_email
+        existing.phone = normalized_phone
+        existing.password_hash = user.password
+        existing.role = user.role
+        existing.is_active = True
+        db.commit()
+        db.refresh(existing)
+        return {"message": "User registered successfully", "id": existing.id, "role": existing.role}
+
     new_user = dbuser(
-        full_name=user.full_name,
-        email=user.email,
-        phone=user.phone,
-        password_hash=user.password,  # Storing as is for development/mocking
+        full_name=user.full_name.strip(),
+        email=normalized_email,
+        phone=normalized_phone,
+        password_hash=user.password,
         role=user.role,
         is_active=True
     )
@@ -756,25 +812,81 @@ def register_user(user: UserRegister, db: Session = Depends(getdb)):
 
 @app.post("/login")
 def login_user(user: UserLogin, db: Session = Depends(getdb)):
-    db_user = db.query(dbuser).filter(dbuser.email == user.email).first()
-    if not db_user or db_user.password_hash != user.password:
-        raise HTTPException(status_code=401, detail="Invalid email or password")
-    
-    # Check if user is also a tenant to return tenant_id
-    tenant_id = None
-    if db_user.role == "tenant":
-        tenant = db.query(dbtenant).filter(dbtenant.email == db_user.email).first()
+    if user.email and user.password:
+        normalized_email = (user.email or "").strip().lower()
+        db_user = db.query(dbuser).filter(dbuser.email == normalized_email).first()
+        if not db_user:
+            db_user = db.query(dbuser).filter(dbuser.email == user.email).first()
+        if db_user and db_user.password_hash == user.password:
+            tenant_id = None
+            if db_user.role == "tenant":
+                tenant = db.query(dbtenant).filter(
+                    or_(
+                        dbtenant.email == db_user.email,
+                        dbtenant.email == normalized_email,
+                        dbtenant.phone == db_user.phone,
+                    )
+                ).first()
+                if tenant:
+                    tenant_id = tenant.id
+
+            return {
+                "message": "Login successful",
+                "user_id": db_user.id,
+                "full_name": db_user.full_name,
+                "email": db_user.email,
+                "phone": db_user.phone,
+                "role": db_user.role,
+                "tenant_id": tenant_id
+            }
+
+    if user.email and not user.password:
+        tenant = db.query(dbtenant).filter(
+            or_(
+                dbtenant.email == user.email,
+                dbtenant.email == (user.email or "").strip().lower(),
+            )
+        ).first()
         if tenant:
-            tenant_id = tenant.id
-    
+            return {
+                "message": "Login successful",
+                "user_id": None,
+                "full_name": tenant.full_name,
+                "email": tenant.email,
+                "phone": tenant.phone,
+                "role": "tenant",
+                "tenant_id": tenant.id,
+                "common_id": tenant.common_id,
+                "aadhaar_number": tenant.aadhaar_number,
+                "pan_number": tenant.pan_number,
+            }
+
+    if not any([user.common_id, user.aadhaar_number, user.pan_number]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+    tenant_query = db.query(dbtenant)
+    if user.common_id:
+        tenant_query = tenant_query.filter(dbtenant.common_id == user.common_id)
+    if user.aadhaar_number:
+        tenant_query = tenant_query.filter(dbtenant.aadhaar_number == user.aadhaar_number)
+    if user.pan_number:
+        tenant_query = tenant_query.filter(dbtenant.pan_number == user.pan_number)
+
+    tenant = tenant_query.first()
+    if not tenant:
+        raise HTTPException(status_code=401, detail="No matching PG tenant found")
+
     return {
         "message": "Login successful",
-        "user_id": db_user.id,
-        "full_name": db_user.full_name,
-        "email": db_user.email,
-        "phone": db_user.phone,
-        "role": db_user.role,
-        "tenant_id": tenant_id
+        "user_id": None,
+        "full_name": tenant.full_name,
+        "email": tenant.email,
+        "phone": tenant.phone,
+        "role": "tenant",
+        "tenant_id": tenant.id,
+        "common_id": tenant.common_id,
+        "aadhaar_number": tenant.aadhaar_number,
+        "pan_number": tenant.pan_number,
     }
 
 
@@ -836,6 +948,7 @@ def get_tenant_details(tenant_id: int, db: Session = Depends(getdb)):
         "email": tenant.email,
         "phone": tenant.phone,
         "gender": tenant.gender,
+        "common_id": tenant.common_id,
         "status": tenant.status,
         "property_id": tenant.property_id,
         "property_name": property_name,

@@ -15,6 +15,7 @@ class Tenant(Base):
     email = Column(String(150), nullable=True)
     phone = Column(String(15), nullable=True)
     gender = Column(String(20), nullable=True)
+    common_id = Column(String(50), nullable=True, index=True)
 
     # KYC details
     aadhaar_number = Column(String(20), nullable=True)
