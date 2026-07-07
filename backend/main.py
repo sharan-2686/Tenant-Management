@@ -820,13 +820,15 @@ def login_user(user: UserLogin, db: Session = Depends(getdb)):
         if db_user and db_user.password_hash == user.password:
             tenant_id = None
             if db_user.role == "tenant":
-                tenant = db.query(dbtenant).filter(
-                    or_(
-                        dbtenant.email == db_user.email,
-                        dbtenant.email == normalized_email,
-                        dbtenant.phone == db_user.phone,
-                    )
-                ).first()
+                tenant = db.query(dbtenant).filter(dbtenant.user_id == db_user.id).first()
+                if not tenant:
+                    tenant = db.query(dbtenant).filter(
+                        or_(
+                            dbtenant.email == db_user.email,
+                            dbtenant.email == normalized_email,
+                            dbtenant.phone == db_user.phone,
+                        )
+                    ).first()
                 if tenant:
                     tenant_id = tenant.id
 
@@ -846,7 +848,7 @@ def login_user(user: UserLogin, db: Session = Depends(getdb)):
                 dbtenant.email == user.email,
                 dbtenant.email == (user.email or "").strip().lower(),
             )
-        ).first()
+        ).order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
         if tenant:
             return {
                 "message": "Login successful",
@@ -872,7 +874,7 @@ def login_user(user: UserLogin, db: Session = Depends(getdb)):
     if user.pan_number:
         tenant_query = tenant_query.filter(dbtenant.pan_number == user.pan_number)
 
-    tenant = tenant_query.first()
+    tenant = tenant_query.order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
     if not tenant:
         raise HTTPException(status_code=401, detail="No matching PG tenant found")
 

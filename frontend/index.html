@@ -1,1652 +1,2542 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tenant Portal</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --bg:#F6F9F7;
-    --surface:#FFFFFF;
-    --surface-alt:#EFF6F1;
-    --primary-900:#0A4A38;
-    --primary-700:#0B6B4F;
-    --primary-600:#0F9D66;
-    --primary-500:#17B978;
-    --primary-100:#DCF3E6;
-    --ink-900:#10241C;
-    --ink-600:#4B5D55;
-    --ink-400:#7C8F87;
-    --line:#DCE8E1;
-    --amber:#B5730A;
-    --amber-bg:#FBF0DD;
-    --red:#B4402A;
-    --red-bg:#FBE7E2;
-    --blue:#2A5FA5;
-    --blue-bg:#E7EFFA;
-    --violet:#6E4FA3;
-    --violet-bg:#EFE8FA;
-    --radius-lg:20px;
-    --radius-md:14px;
-    --radius-sm:9px;
-    --shadow-card:0 1px 2px rgba(16,36,28,0.04), 0 8px 24px -12px rgba(16,36,28,0.10);
-    --font-display:'Fraunces', serif;
-    --font-body:'Inter', sans-serif;
-    --font-mono:'IBM Plex Mono', monospace;
-  }
-
-  *{box-sizing:border-box; margin:0; padding:0;}
-
-  @media (prefers-reduced-motion: reduce){
-    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
-  }
-
-  body{
-    font-family:var(--font-body);
-    background:var(--bg);
-    color:var(--ink-900);
-    display:flex;
-    min-height:100vh;
-    overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
-  }
-
-  a{color:inherit;}
-
-  button{font-family:inherit; cursor:pointer;}
-
-  ::selection{background:var(--primary-100); color:var(--primary-900);}
-
-  /* ---------- Sidebar ---------- */
-  .sidebar{
-    width:248px;
-    flex-shrink:0;
-    background:var(--surface);
-    border-right:1px solid var(--line);
-    display:flex;
-    flex-direction:column;
-    padding:24px 16px;
-    position:sticky;
-    top:0;
-    height:100vh;
-  }
-
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:11px;
-    padding:4px 8px 24px 8px;
-  }
-
-  .brand-mark{
-    width:36px; height:36px;
-    border-radius:10px;
-    background:linear-gradient(155deg, var(--primary-500), var(--primary-700));
-    display:flex; align-items:center; justify-content:center;
-    color:white;
-    font-family:var(--font-display);
-    font-weight:600;
-    font-size:17px;
-    flex-shrink:0;
-  }
-
-  .brand-text{line-height:1.15;}
-  .brand-text .name{font-family:var(--font-display); font-weight:600; font-size:15.5px;}
-  .brand-text .sub{font-size:11px; color:var(--ink-400); letter-spacing:0.03em;}
-
-  .nav-group-label{
-    font-size:10.5px;
-    text-transform:uppercase;
-    letter-spacing:0.09em;
-    color:var(--ink-400);
-    padding:14px 12px 6px;
-    font-weight:600;
-  }
-
-  .nav-list{list-style:none; display:flex; flex-direction:column; gap:2px;}
-
-  .nav-btn{
-    width:100%;
-    display:flex;
-    align-items:center;
-    gap:11px;
-    padding:9px 12px;
-    border:none;
-    background:transparent;
-    border-radius:var(--radius-sm);
-    color:var(--ink-600);
-    font-size:13.5px;
-    font-weight:500;
-    text-align:left;
-    transition:background 0.15s ease, color 0.15s ease;
-  }
-
-  .nav-btn svg{flex-shrink:0; opacity:0.85;}
-
-  .nav-btn:hover{background:var(--surface-alt); color:var(--ink-900);}
-
-  .nav-btn.active{
-    background:var(--primary-100);
-    color:var(--primary-900);
-    font-weight:600;
-  }
-
-  .nav-btn.active svg{opacity:1;}
-
-  .nav-btn:focus-visible{outline:2px solid var(--primary-600); outline-offset:2px;}
-
-  .sidebar-footer{
-    margin-top:auto;
-    border-top:1px solid var(--line);
-    padding-top:14px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding-left:8px;
-  }
-
-  .avatar-sm{
-    width:34px; height:34px;
-    border-radius:50%;
-    background:var(--primary-700);
-    color:white;
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display);
-    font-weight:600;
-    font-size:13px;
-    flex-shrink:0;
-  }
-
-  .sidebar-footer .who{line-height:1.2;}
-  .sidebar-footer .who .n{font-size:13px; font-weight:600;}
-  .sidebar-footer .who .r{font-size:11px; color:var(--ink-400);}
-
-  /* ---------- Main ---------- */
-  .main{flex:1; min-width:0; display:flex; flex-direction:column;}
-
-  .logged-out .sidebar,
-  .logged-out .main,
-  .logged-out .topbar {
-    display: none;
-  }
-
-  #login-screen {
-    position: fixed;
-    inset: 0;
-    background: rgba(15, 30, 24, 0.62);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 24px;
-  }
-
-  .login-card {
-    width: min(620px, 100%);
-    border-radius: 28px;
-    background: var(--surface);
-    padding: 32px;
-    box-shadow: 0 24px 80px rgba(0,0,0,0.12);
-  }
-
-  .login-title {
-    font-size: 22px;
-    font-weight: 700;
-    margin-bottom: 8px;
-  }
-
-  .login-sub {
-    color: var(--ink-400);
-    margin-bottom: 24px;
-    line-height: 1.5;
-  }
-
-  .auth-tab-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 24px;
-  }
-
-  .auth-tab {
-    border: 1px solid var(--line);
-    background: var(--surface-alt);
-    border-radius: 14px;
-    padding: 14px 18px;
-    font-weight: 700;
-    color: var(--ink-600);
-    cursor: pointer;
-  }
-
-  .auth-tab.active {
-    background: var(--primary-100);
-    border-color: var(--primary-500);
-    color: var(--primary-900);
-  }
-
-  .auth-form {
-    display: block;
-  }
-
-  .auth-form.hidden {
-    display: none;
-  }
-
-  .auth-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .auth-fields-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-  }
-
-  .auth-field.full {
-    grid-column: 1 / -1;
-  }
-
-  .auth-field label {
-    font-size: 13px;
-    color: var(--ink-600);
-  }
-
-  .auth-field input,
-  .auth-field select {
-    width: 100%;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 12px 14px;
-    font-size: 14px;
-    color: var(--ink-900);
-    background: var(--surface);
-  }
-
-  .auth-status {
-    margin-top: 10px;
-    font-size: 13px;
-    color: var(--ink-600);
-    min-height: 20px;
-  }
-
-  .auth-btn {
-    width: 100%;
-  }
-
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:20px 36px;
-    border-bottom:1px solid var(--line);
-    background:var(--surface);
-    position:sticky;
-    top:0;
-    z-index:5;
-  }
-
-  .topbar-eyebrow{
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:0.09em;
-    color:var(--primary-600);
-    font-weight:700;
-    margin-bottom:2px;
-  }
-
-  .topbar h1{
-    font-family:var(--font-display);
-    font-size:23px;
-    font-weight:600;
-    letter-spacing:-0.01em;
-  }
-
-  .topbar-actions{display:flex; align-items:center; gap:12px;}
-
-  .icon-btn{
-    width:38px; height:38px;
-    border-radius:50%;
-    border:1px solid var(--line);
-    background:var(--surface);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--ink-600);
-    position:relative;
-    transition:border-color 0.15s ease, color 0.15s ease;
-  }
-  .icon-btn:hover{border-color:var(--primary-500); color:var(--primary-700);}
-  .icon-btn .dot{
-    position:absolute; top:8px; right:8px;
-    width:7px; height:7px; border-radius:50%;
-    background:var(--red); border:1.5px solid var(--surface);
-  }
-
-  .content{padding:32px 36px 56px; max-width:1180px; width:100%;}
-
-  .tab-section{display:none; animation:fadein 0.35s ease;}
-  .tab-section.active{display:block;}
-
-  @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
-
-  .section-title{
-    font-family:var(--font-display);
-    font-size:15.5px;
-    font-weight:600;
-    margin-bottom:14px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-
-  .eyebrow-label{
-    font-size:10.5px;
-    text-transform:uppercase;
-    letter-spacing:0.09em;
-    color:var(--ink-400);
-    font-weight:700;
-    margin-bottom:10px;
-  }
-
-  /* ---------- Hero row (Dashboard) ---------- */
-  .hero-row{
-    display:grid;
-    grid-template-columns:340px 1fr;
-    gap:20px;
-    margin-bottom:28px;
-  }
-
-  /* Signature: Key Card */
-  .keycard{
-    position:relative;
-    border-radius:22px;
-    padding:22px 22px 20px;
-    background:
-      radial-gradient(120% 140% at 100% 0%, rgba(255,255,255,0.14), transparent 55%),
-      linear-gradient(150deg, var(--primary-600), var(--primary-900) 78%);
-    color:white;
-    box-shadow:var(--shadow-card);
-    overflow:hidden;
-    min-height:210px;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-  }
-
-  .keycard::before{
-    content:"";
-    position:absolute;
-    left:-11px; top:26px; bottom:26px;
-    width:22px;
-    background:
-      repeating-linear-gradient(to bottom, transparent 0 8px, rgba(255,255,255,0.55) 8px 9px);
-    border-radius:50%;
-    opacity:0.5;
-    -webkit-mask-image: radial-gradient(circle at 50%, black 55%, transparent 58%);
-    mask-image: radial-gradient(circle at 50%, black 55%, transparent 58%);
-    -webkit-mask-repeat: repeat-y;
-    mask-repeat: repeat-y;
-    -webkit-mask-size: 100% 18px;
-    mask-size: 100% 18px;
-  }
-
-  .keycard-top{display:flex; justify-content:space-between; align-items:flex-start;}
-  .keycard-tag{
-    font-size:10px; text-transform:uppercase; letter-spacing:0.12em;
-    opacity:0.75; font-weight:600;
-  }
-  .keycard-prop{
-    font-family:var(--font-display); font-size:17px; font-weight:600; margin-top:2px;
-  }
-  .keycard-status{
-    font-size:10.5px;
-    background:rgba(255,255,255,0.16);
-    border:1px solid rgba(255,255,255,0.3);
-    padding:4px 9px;
-    border-radius:100px;
-    font-weight:600;
-    display:flex; align-items:center; gap:5px;
-  }
-  .keycard-status .pulse{width:6px; height:6px; border-radius:50%; background:#8CFCC0;}
-
-  .keycard-mid{display:flex; gap:30px; margin:14px 0 4px;}
-  .keycard-field .l{font-size:9.5px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.65; margin-bottom:3px;}
-  .keycard-field .v{font-family:var(--font-mono); font-size:19px; font-weight:600;}
-
-  .keycard-bottom{display:flex; justify-content:space-between; align-items:flex-end;}
-  .keycard-name{font-family:var(--font-display); font-size:15px; font-weight:600;}
-  .keycard-since{font-size:10.5px; opacity:0.75; margin-top:2px; font-family:var(--font-mono);}
-
-  .barcode{display:flex; gap:2px; align-items:flex-end; height:26px;}
-  .barcode span{display:block; width:2px; background:rgba(255,255,255,0.55);}
-
-  /* Quick stat stack next to key card */
-  .quick-stack{display:flex; flex-direction:column; gap:12px;}
-  .quick-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; flex:1;}
-
-  /* ---------- Stat Cards (mirrors admin dashboard) ---------- */
-  .stat-card{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:var(--radius-md);
-    padding:16px 17px 15px;
-    box-shadow:var(--shadow-card);
-    position:relative;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .stat-card::before{
-    content:"";
-    position:absolute; top:0; left:0; right:0; height:3.5px;
-  }
-  .stat-card.c-green::before{background:var(--primary-600);}
-  .stat-card.c-amber::before{background:var(--amber);}
-  .stat-card.c-red::before{background:var(--red);}
-  .stat-card.c-blue::before{background:var(--blue);}
-  .stat-card.c-violet::before{background:var(--violet);}
-
-  .stat-top{display:flex; align-items:flex-start; justify-content:space-between;}
-  .stat-label{font-size:12.5px; color:var(--ink-600); font-weight:500;}
-  .stat-icon{
-    width:30px; height:30px; border-radius:9px;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-  }
-  .stat-icon.c-green{background:var(--primary-100); color:var(--primary-700);}
-  .stat-icon.c-amber{background:var(--amber-bg); color:var(--amber);}
-  .stat-icon.c-red{background:var(--red-bg); color:var(--red);}
-  .stat-icon.c-blue{background:var(--blue-bg); color:var(--blue);}
-  .stat-icon.c-violet{background:var(--violet-bg); color:var(--violet);}
-
-  .stat-value{font-family:var(--font-display); font-size:26px; font-weight:600; letter-spacing:-0.01em;}
-  .stat-value .unit{font-family:var(--font-mono); font-size:15px; font-weight:500; color:var(--ink-400);}
-
-  .stat-foot{display:flex; align-items:center; justify-content:space-between;}
-  .pill{
-    font-size:11px; font-weight:600; padding:3px 9px; border-radius:100px;
-  }
-  .pill.p-green{background:var(--primary-100); color:var(--primary-700);}
-  .pill.p-amber{background:var(--amber-bg); color:var(--amber);}
-  .pill.p-red{background:var(--red-bg); color:var(--red);}
-  .pill.p-blue{background:var(--blue-bg); color:var(--blue);}
-  .pill.p-violet{background:var(--violet-bg); color:var(--violet);}
-  .pill.p-neutral{background:var(--surface-alt); color:var(--ink-600);}
-
-  .delta{font-size:11.5px; font-weight:600; font-family:var(--font-mono);}
-  .delta.up{color:var(--primary-700);}
-  .delta.down{color:var(--red);}
-
-  /* ---------- Two column dashboard grid ---------- */
-  .two-col{display:grid; grid-template-columns:1.35fr 1fr; gap:20px; align-items:start;}
-
-  .panel{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-card);
-    padding:20px 22px 22px;
-  }
-
-  .panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
-  .panel-head h3{font-family:var(--font-display); font-size:15px; font-weight:600;}
-  .link-btn{
-    font-size:12px; font-weight:600; color:var(--primary-700); background:none; border:none;
-  }
-  .link-btn:hover{text-decoration:underline;}
-
-  /* mini ledger rows */
-  .ledger-row{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:11px 0;
-    border-bottom:1px solid var(--line);
-  }
-  .ledger-row:last-child{border-bottom:none;}
-  .ledger-left{display:flex; align-items:center; gap:12px;}
-  .ledger-dot{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .ledger-meta .m1{font-size:13px; font-weight:600;}
-  .ledger-meta .m2{font-size:11.5px; color:var(--ink-400); font-family:var(--font-mono);}
-  .ledger-amt{font-family:var(--font-mono); font-weight:600; font-size:13.5px; text-align:right;}
-  .ledger-amt .st{display:block; font-size:10.5px; font-weight:600; margin-top:2px;}
-
-  /* activity feed */
-  .feed-item{display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--line);}
-  .feed-item:last-child{border-bottom:none;}
-  .feed-icon{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
-  .feed-text .t1{font-size:12.5px; line-height:1.45;}
-  .feed-text .t2{font-size:11px; color:var(--ink-400); margin-top:2px; font-family:var(--font-mono);}
-
-  /* ---------- Buttons ---------- */
-  .btn{
-    display:inline-flex; align-items:center; gap:7px;
-    padding:9px 16px;
-    border-radius:10px;
-    font-size:13px; font-weight:600;
-    border:1px solid transparent;
-    transition:transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
-  }
-  .btn:active{transform:translateY(1px);}
-  .btn-primary{background:var(--primary-700); color:white;}
-  .btn-primary:hover{background:var(--primary-900);}
-  .btn-outline{background:var(--surface); color:var(--ink-900); border-color:var(--line);}
-  .btn-outline:hover{border-color:var(--primary-500); color:var(--primary-700);}
-  .btn-sm{padding:6px 12px; font-size:12px; border-radius:8px;}
-  .btn:focus-visible{outline:2px solid var(--primary-600); outline-offset:2px;}
-
-  /* ---------- Rent & Payments tab ---------- */
-  .stat-grid-4{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:22px;}
-
-  .table-wrap{
-    background:var(--surface);
-    border:1px solid var(--line);
-    border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-card);
-    overflow:hidden;
-  }
-  table{width:100%; border-collapse:collapse;}
-  thead th{
-    text-align:left;
-    font-size:10.5px;
-    text-transform:uppercase;
-    letter-spacing:0.07em;
-    color:var(--ink-400);
-    font-weight:700;
-    padding:13px 20px;
-    background:var(--surface-alt);
-    border-bottom:1px solid var(--line);
-  }
-  tbody td{
-    padding:14px 20px;
-    font-size:13px;
-    border-bottom:1px solid var(--line);
-  }
-  tbody tr:last-child td{border-bottom:none;}
-  tbody tr:hover{background:var(--surface-alt);}
-  td.mono, th.mono{font-family:var(--font-mono);}
-
-  .status-badge{
-    display:inline-flex; align-items:center; gap:5px;
-    font-size:11px; font-weight:600; padding:4px 10px; border-radius:100px;
-  }
-  .status-badge .dot{width:6px; height:6px; border-radius:50%;}
-  .status-badge.paid{background:var(--primary-100); color:var(--primary-700);}
-  .status-badge.paid .dot{background:var(--primary-600);}
-  .status-badge.pending{background:var(--amber-bg); color:var(--amber);}
-  .status-badge.pending .dot{background:var(--amber);}
-  .status-badge.overdue{background:var(--red-bg); color:var(--red);}
-  .status-badge.overdue .dot{background:var(--red);}
-  .status-badge.resolved{background:var(--primary-100); color:var(--primary-700);}
-  .status-badge.resolved .dot{background:var(--primary-600);}
-  .status-badge.progress{background:var(--blue-bg); color:var(--blue);}
-  .status-badge.progress .dot{background:var(--blue);}
-  .status-badge.inside{background:var(--blue-bg); color:var(--blue);}
-  .status-badge.inside .dot{background:var(--blue);}
-  .status-badge.exited{background:var(--surface-alt); color:var(--ink-600);}
-  .status-badge.exited .dot{background:var(--ink-400);}
-
-  /* ---------- Documents tab ---------- */
-  .doc-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
-  .doc-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-card); padding:20px;
-    display:flex; flex-direction:column; gap:14px;
-  }
-  .doc-icon{
-    width:44px; height:44px; border-radius:12px;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .doc-title{font-family:var(--font-display); font-size:15px; font-weight:600;}
-  .doc-desc{font-size:12px; color:var(--ink-400); line-height:1.5;}
-  .doc-foot{display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:6px;}
-
-  /* ---------- Visitors / Feedback forms ---------- */
-  .form-panel{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-card); padding:22px; margin-bottom:22px;
-  }
-  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
-  .field{display:flex; flex-direction:column; gap:6px;}
-  .field.full{grid-column:1 / -1;}
-  .field label{font-size:12px; font-weight:600; color:var(--ink-600);}
-  .field input, .field textarea, .field select{
-    border:1px solid var(--line); border-radius:9px; padding:9px 12px;
-    font-family:var(--font-body); font-size:13px; background:var(--surface-alt);
-    color:var(--ink-900);
-  }
-  .field textarea{resize:vertical; min-height:80px;}
-  .field input:focus, .field textarea:focus, .field select:focus{
-    outline:2px solid var(--primary-500); outline-offset:1px; background:var(--surface);
-  }
-
-  /* ---------- Profile tab ---------- */
-  .profile-grid{display:grid; grid-template-columns:280px 1fr; gap:20px;}
-  .profile-card{
-    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
-    box-shadow:var(--shadow-card); padding:24px; text-align:center;
-  }
-  .profile-avatar{
-    width:74px; height:74px; border-radius:50%; margin:0 auto 14px;
-    background:linear-gradient(155deg, var(--primary-500), var(--primary-800, var(--primary-900)));
-    color:white; display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display); font-size:26px; font-weight:600;
-  }
-  .profile-card .p-name{font-family:var(--font-display); font-size:17px; font-weight:600;}
-  .profile-card .p-role{font-size:12px; color:var(--ink-400); margin-top:2px; margin-bottom:16px;}
-
-  .info-row{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-size:13px;}
-  .info-row:last-child{border-bottom:none;}
-  .info-row .k{color:var(--ink-400);}
-  .info-row .v{font-weight:600; font-family:var(--font-mono); text-align:right;}
-
-  .empty-state{
-    text-align:center; padding:38px 20px; color:var(--ink-400);
-  }
-  .empty-state svg{margin-bottom:10px; opacity:0.5;}
-  .empty-state .e1{font-size:13px; font-weight:600; color:var(--ink-600);}
-  .empty-state .e2{font-size:12px; margin-top:3px;}
-
-  @media (max-width: 980px){
-    body{flex-direction:column;}
-    .sidebar{display:none;}
-    .main{display:flex;}
-    .hero-row{grid-template-columns:1fr;}
-    .two-col{grid-template-columns:1fr;}
-    .stat-grid-4{grid-template-columns:repeat(2,minmax(0,1fr));}
-    .doc-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
-    .profile-grid{grid-template-columns:1fr;}
-    .form-grid{grid-template-columns:1fr;}
-    .topbar{padding:16px 20px;}
-    .content{padding:20px 20px 40px;}
-    .keycard-mid{gap:18px; flex-wrap:wrap;}
-    .quick-row{grid-template-columns:repeat(2,minmax(0,1fr));}
-    .table-wrap{overflow-x:auto;}
-  }
-
-  @media (max-width: 640px){
-    #login-screen{padding:12px;}
-    .login-card{padding:24px 18px; border-radius:22px; max-height:calc(100vh - 24px); overflow:auto;}
-    .auth-tab-row{gap:8px;}
-    .auth-fields-grid{grid-template-columns:1fr; gap:12px;}
-    .auth-field{margin-bottom:14px;}
-    .login-title{font-size:20px;}
-    .login-sub{font-size:13px; margin-bottom:18px;}
-    .topbar{flex-direction:column; align-items:flex-start; gap:10px;}
-    .topbar-actions{width:100%; justify-content:flex-end; flex-wrap:wrap;}
-    .topbar h1{font-size:20px;}
-    .content{padding:16px 14px 32px;}
-    .panel, .form-panel, .profile-card, .doc-card, .stat-card{padding:16px;}
-    .keycard{padding:18px; min-height:auto;}
-    .keycard-mid{flex-direction:column; gap:12px;}
-    .keycard-bottom{flex-direction:column; align-items:flex-start; gap:10px;}
-    .quick-row{grid-template-columns:1fr;}
-    .doc-grid{grid-template-columns:1fr;}
-    .stat-grid-4{grid-template-columns:1fr;}
-    .section-title{flex-direction:column; align-items:flex-start; gap:6px;}
-    .btn{width:100%; justify-content:center;}
-    .btn-sm{padding:8px 12px;}
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tenant Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F6F9F7;
+      --surface: #FFFFFF;
+      --surface-alt: #EFF6F1;
+      --primary-900: #0A4A38;
+      --primary-700: #0B6B4F;
+      --primary-600: #0F9D66;
+      --primary-500: #17B978;
+      --primary-100: #DCF3E6;
+      --ink-900: #10241C;
+      --ink-600: #4B5D55;
+      --ink-400: #7C8F87;
+      --line: #DCE8E1;
+      --amber: #B5730A;
+      --amber-bg: #FBF0DD;
+      --red: #B4402A;
+      --red-bg: #FBE7E2;
+      --blue: #2A5FA5;
+      --blue-bg: #E7EFFA;
+      --violet: #6E4FA3;
+      --violet-bg: #EFE8FA;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --radius-sm: 9px;
+      --shadow-card: 0 1px 2px rgba(16, 36, 28, 0.04), 0 8px 24px -12px rgba(16, 36, 28, 0.10);
+      --font-display: 'Fraunces', serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink-900);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    ::selection {
+      background: var(--primary-100);
+      color: var(--primary-900);
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      width: 248px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 16px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 4px 8px 24px 8px;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(155deg, var(--primary-500), var(--primary-700));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .brand-text {
+      line-height: 1.15;
+    }
+
+    .brand-text .name {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 15.5px;
+    }
+
+    .brand-text .sub {
+      font-size: 11px;
+      color: var(--ink-400);
+      letter-spacing: 0.03em;
+    }
+
+    .nav-group-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--ink-400);
+      padding: 14px 12px 6px;
+      font-weight: 600;
+    }
+
+    .nav-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 9px 12px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      color: var(--ink-600);
+      font-size: 13.5px;
+      font-weight: 500;
+      text-align: left;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .nav-btn svg {
+      flex-shrink: 0;
+      opacity: 0.85;
+    }
+
+    .nav-btn:hover {
+      background: var(--surface-alt);
+      color: var(--ink-900);
+    }
+
+    .nav-btn.active {
+      background: var(--primary-100);
+      color: var(--primary-900);
+      font-weight: 600;
+    }
+
+    .nav-btn.active svg {
+      opacity: 1;
+    }
+
+    .nav-btn:focus-visible {
+      outline: 2px solid var(--primary-600);
+      outline-offset: 2px;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 8px;
+    }
+
+    .avatar-sm {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--primary-700);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-footer .who {
+      line-height: 1.2;
+    }
+
+    .sidebar-footer .who .n {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .sidebar-footer .who .r {
+      font-size: 11px;
+      color: var(--ink-400);
+    }
+
+    /* ---------- Main ---------- */
+    .main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logged-out .sidebar,
+    .logged-out .main,
+    .logged-out .topbar {
+      display: none;
+    }
+
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 30, 24, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: min(620px, 100%);
+      border-radius: 28px;
+      background: var(--surface);
+      padding: 32px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
+    }
+
+    .login-title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .login-sub {
+      color: var(--ink-400);
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .auth-tab-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .auth-tab {
+      border: 1px solid var(--line);
+      background: var(--surface-alt);
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-weight: 700;
+      color: var(--ink-600);
+      cursor: pointer;
+    }
+
+    .auth-tab.active {
+      background: var(--primary-100);
+      border-color: var(--primary-500);
+      color: var(--primary-900);
+    }
+
+    .auth-form {
+      display: block;
+    }
+
+    .auth-form.hidden {
+      display: none;
+    }
+
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .auth-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .auth-field.full {
+      grid-column: 1 / -1;
+    }
+
+    .auth-field label {
+      font-size: 13px;
+      color: var(--ink-600);
+    }
+
+    .auth-field input,
+    .auth-field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--ink-900);
+      background: var(--surface);
+    }
+
+    .auth-status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--ink-600);
+      min-height: 20px;
+    }
+
+    .auth-btn {
+      width: 100%;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 36px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .topbar-eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--primary-600);
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+
+    .topbar h1 {
+      font-family: var(--font-display);
+      font-size: 23px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-600);
+      position: relative;
+      transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--primary-500);
+      color: var(--primary-700);
+    }
+
+    .icon-btn .dot {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 1.5px solid var(--surface);
+    }
+
+    .content {
+      padding: 32px 36px 56px;
+      max-width: 1180px;
+      width: 100%;
+    }
+
+    .tab-section {
+      display: none;
+      animation: fadein 0.35s ease;
+    }
+
+    .tab-section.active {
+      display: block;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 15.5px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .eyebrow-label {
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--ink-400);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    /* ---------- Hero row (Dashboard) ---------- */
+    .hero-row {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    /* Signature: Key Card */
+    .keycard {
+      position: relative;
+      border-radius: 22px;
+      padding: 22px 22px 20px;
+      background:
+        radial-gradient(120% 140% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 55%),
+        linear-gradient(150deg, var(--primary-600), var(--primary-900) 78%);
+      color: white;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      min-height: 210px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .keycard::before {
+      content: "";
+      position: absolute;
+      left: -11px;
+      top: 26px;
+      bottom: 26px;
+      width: 22px;
+      background:
+        repeating-linear-gradient(to bottom, transparent 0 8px, rgba(255, 255, 255, 0.55) 8px 9px);
+      border-radius: 50%;
+      opacity: 0.5;
+      -webkit-mask-image: radial-gradient(circle at 50%, black 55%, transparent 58%);
+      mask-image: radial-gradient(circle at 50%, black 55%, transparent 58%);
+      -webkit-mask-repeat: repeat-y;
+      mask-repeat: repeat-y;
+      -webkit-mask-size: 100% 18px;
+      mask-size: 100% 18px;
+    }
+
+    .keycard-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .keycard-tag {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.75;
+      font-weight: 600;
+    }
+
+    .keycard-prop {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .keycard-status {
+      font-size: 10.5px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 9px;
+      border-radius: 100px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .keycard-status .pulse {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #8CFCC0;
+    }
+
+    .keycard-mid {
+      display: flex;
+      gap: 30px;
+      margin: 14px 0 4px;
+    }
+
+    .keycard-field .l {
+      font-size: 9.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.65;
+      margin-bottom: 3px;
+    }
+
+    .keycard-field .v {
+      font-family: var(--font-mono);
+      font-size: 19px;
+      font-weight: 600;
+    }
+
+    .keycard-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .keycard-name {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .keycard-since {
+      font-size: 10.5px;
+      opacity: 0.75;
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    .barcode {
+      display: flex;
+      gap: 2px;
+      align-items: flex-end;
+      height: 26px;
+    }
+
+    .barcode span {
+      display: block;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.55);
+    }
+
+    /* Quick stat stack next to key card */
+    .quick-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .quick-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      flex: 1;
+    }
+
+    /* ---------- Stat Cards (mirrors admin dashboard) ---------- */
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 16px 17px 15px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3.5px;
+    }
+
+    .stat-card.c-green::before {
+      background: var(--primary-600);
+    }
+
+    .stat-card.c-amber::before {
+      background: var(--amber);
+    }
+
+    .stat-card.c-red::before {
+      background: var(--red);
+    }
+
+    .stat-card.c-blue::before {
+      background: var(--blue);
+    }
+
+    .stat-card.c-violet::before {
+      background: var(--violet);
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .stat-label {
+      font-size: 12.5px;
+      color: var(--ink-600);
+      font-weight: 500;
+    }
+
+    .stat-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.c-green {
+      background: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .stat-icon.c-amber {
+      background: var(--amber-bg);
+      color: var(--amber);
+    }
+
+    .stat-icon.c-red {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .stat-icon.c-blue {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .stat-icon.c-violet {
+      background: var(--violet-bg);
+      color: var(--violet);
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .stat-value .unit {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink-400);
+    }
+
+    .stat-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 100px;
+    }
+
+    .pill.p-green {
+      background: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .pill.p-amber {
+      background: var(--amber-bg);
+      color: var(--amber);
+    }
+
+    .pill.p-red {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .pill.p-blue {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .pill.p-violet {
+      background: var(--violet-bg);
+      color: var(--violet);
+    }
+
+    .pill.p-neutral {
+      background: var(--surface-alt);
+      color: var(--ink-600);
+    }
+
+    .delta {
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .delta.up {
+      color: var(--primary-700);
+    }
+
+    .delta.down {
+      color: var(--red);
+    }
+
+    /* ---------- Two column dashboard grid ---------- */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 20px 22px 22px;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .panel-head h3 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .link-btn {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-700);
+      background: none;
+      border: none;
+    }
+
+    .link-btn:hover {
+      text-decoration: underline;
+    }
+
+    /* mini ledger rows */
+    .ledger-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .ledger-row:last-child {
+      border-bottom: none;
+    }
+
+    .ledger-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ledger-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ledger-meta .m1 {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .ledger-meta .m2 {
+      font-size: 11.5px;
+      color: var(--ink-400);
+      font-family: var(--font-mono);
+    }
+
+    .ledger-amt {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 13.5px;
+      text-align: right;
+    }
+
+    .ledger-amt .st {
+      display: block;
+      font-size: 10.5px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* activity feed */
+    .feed-item {
+      display: flex;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .feed-item:last-child {
+      border-bottom: none;
+    }
+
+    .feed-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .feed-text .t1 {
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .feed-text .t2 {
+      font-size: 11px;
+      color: var(--ink-400);
+      margin-top: 2px;
+      font-family: var(--font-mono);
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--primary-700);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-900);
+    }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--ink-900);
+      border-color: var(--line);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary-500);
+      color: var(--primary-700);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .btn:focus-visible {
+      outline: 2px solid var(--primary-600);
+      outline-offset: 2px;
+    }
+
+    /* ---------- Rent & Payments tab ---------- */
+    .stat-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--ink-400);
+      font-weight: 700;
+      padding: 13px 20px;
+      background: var(--surface-alt);
+      border-bottom: 1px solid var(--line);
+    }
+
+    tbody td {
+      padding: 14px 20px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background: var(--surface-alt);
+    }
+
+    td.mono,
+    th.mono {
+      font-family: var(--font-mono);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+
+    .status-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-badge.paid {
+      background: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .status-badge.paid .dot {
+      background: var(--primary-600);
+    }
+
+    .status-badge.pending {
+      background: var(--amber-bg);
+      color: var(--amber);
+    }
+
+    .status-badge.pending .dot {
+      background: var(--amber);
+    }
+
+    .status-badge.overdue {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .status-badge.overdue .dot {
+      background: var(--red);
+    }
+
+    .status-badge.resolved {
+      background: var(--primary-100);
+      color: var(--primary-700);
+    }
+
+    .status-badge.resolved .dot {
+      background: var(--primary-600);
+    }
+
+    .status-badge.progress {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .status-badge.progress .dot {
+      background: var(--blue);
+    }
+
+    .status-badge.inside {
+      background: var(--blue-bg);
+      color: var(--blue);
+    }
+
+    .status-badge.inside .dot {
+      background: var(--blue);
+    }
+
+    .status-badge.exited {
+      background: var(--surface-alt);
+      color: var(--ink-600);
+    }
+
+    .status-badge.exited .dot {
+      background: var(--ink-400);
+    }
+
+    /* ---------- Documents tab ---------- */
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .doc-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .doc-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .doc-title {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .doc-desc {
+      font-size: 12px;
+      color: var(--ink-400);
+      line-height: 1.5;
+    }
+
+    .doc-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 6px;
+    }
+
+    /* ---------- Visitors / Feedback forms ---------- */
+    .form-panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-600);
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 9px 12px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      background: var(--surface-alt);
+      color: var(--ink-900);
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      outline: 2px solid var(--primary-500);
+      outline-offset: 1px;
+      background: var(--surface);
+    }
+
+    /* ---------- Profile tab ---------- */
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 20px;
+    }
+
+    .profile-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: 24px;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      margin: 0 auto 14px;
+      background: linear-gradient(155deg, var(--primary-500), var(--primary-800, var(--primary-900)));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 600;
+    }
+
+    .profile-card .p-name {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 600;
+    }
+
+    .profile-card .p-role {
+      font-size: 12px;
+      color: var(--ink-400);
+      margin-top: 2px;
+      margin-bottom: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row .k {
+      color: var(--ink-400);
+    }
+
+    .info-row .v {
+      font-weight: 600;
+      font-family: var(--font-mono);
+      text-align: right;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 38px 20px;
+      color: var(--ink-400);
+    }
+
+    .empty-state svg {
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    .empty-state .e1 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-600);
+    }
+
+    .empty-state .e2 {
+      font-size: 12px;
+      margin-top: 3px;
+    }
+
+    @media (max-width: 980px) {
+      body {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        display: none;
+      }
+
+      .main {
+        display: flex;
+      }
+
+      .hero-row {
+        grid-template-columns: 1fr;
+      }
+
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .doc-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        padding: 16px 20px;
+      }
+
+      .content {
+        padding: 20px 20px 40px;
+      }
+
+      .keycard-mid {
+        gap: 18px;
+        flex-wrap: wrap;
+      }
+
+      .quick-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      #login-screen {
+        padding: 12px;
+      }
+
+      .login-card {
+        padding: 24px 18px;
+        border-radius: 22px;
+        max-height: calc(100vh - 24px);
+        overflow: auto;
+      }
+
+      .auth-tab-row {
+        gap: 8px;
+      }
+
+      .auth-fields-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .auth-field {
+        margin-bottom: 14px;
+      }
+
+      .login-title {
+        font-size: 20px;
+      }
+
+      .login-sub {
+        font-size: 13px;
+        margin-bottom: 18px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .topbar-actions {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+
+      .topbar h1 {
+        font-size: 20px;
+      }
+
+      .content {
+        padding: 16px 14px 32px;
+      }
+
+      .panel,
+      .form-panel,
+      .profile-card,
+      .doc-card,
+      .stat-card {
+        padding: 16px;
+      }
+
+      .keycard {
+        padding: 18px;
+        min-height: auto;
+      }
+
+      .keycard-mid {
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .keycard-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .quick-row {
+        grid-template-columns: 1fr;
+      }
+
+      .doc-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .stat-grid-4 {
+        grid-template-columns: 1fr;
+      }
+
+      .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .btn-sm {
+        padding: 8px 12px;
+      }
+    }
+  </style>
 </head>
+
 <body class="logged-out">
 
-<div id="login-screen">
-  <div class="login-card">
-    <div class="auth-tab-row">
-      <button type="button" id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
-      <button type="button" id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
-    </div>
-    <div id="login-form" class="auth-form">
-      <div class="login-title">Tenant sign in</div>
-      <div class="login-sub">Use your email and password to access the tenant dashboard.</div>
-      <div class="auth-fields-grid">
-        <div class="auth-field full">
-          <label for="login-email">Email</label>
-          <input type="email" id="login-email" placeholder="you@example.com">
-        </div>
-        <div class="auth-field full">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="••••••••">
-        </div>
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="auth-tab-row">
+        <button type="button" id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+        <button type="button" id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
       </div>
-      <button class="btn btn-primary btn-sm auth-btn" onclick="loginUser()">Log in</button>
-      <div id="login-status" class="auth-status"></div>
-    </div>
-    <div id="register-form" class="auth-form hidden">
-      <div class="login-title">Create tenant account</div>
-      <div class="login-sub">Register first, then upload KYC documents and manage rent.</div>
-      <div class="auth-fields-grid">
-        <div class="auth-field">
-          <label for="reg-full-name">Full name</label>
-          <input type="text" id="reg-full-name" placeholder="Ananya Rao">
+      <div id="login-form" class="auth-form">
+        <div class="login-title">Tenant sign in</div>
+        <div class="login-sub">Use your email and password to access the tenant dashboard.</div>
+        <div class="auth-fields-grid">
+          <div class="auth-field full">
+            <label for="login-email">Email</label>
+            <input type="email" id="login-email" placeholder="you@example.com">
+          </div>
+          <div class="auth-field full">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••">
+          </div>
         </div>
-        <div class="auth-field">
-          <label for="reg-email">Email</label>
-          <input type="email" id="reg-email" placeholder="you@example.com">
-        </div>
-        <div class="auth-field">
-          <label for="reg-phone">Phone</label>
-          <input type="tel" id="reg-phone" placeholder="+91 98xxxxxxxx">
-        </div>
-        <div class="auth-field">
-          <label for="reg-password">Password</label>
-          <input type="password" id="reg-password" placeholder="••••••••">
-        </div>
-        <div class="auth-field">
-          <label for="reg-gender">Gender</label>
-          <select id="reg-gender">
-            <option value="">Select gender</option>
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="auth-field">
-          <label for="reg-common-id">Common PG ID</label>
-          <input type="text" id="reg-common-id" placeholder="Enter common ID">
-        </div>
-        <div class="auth-field">
-          <label for="reg-aadhaar">Aadhaar number</label>
-          <input type="text" id="reg-aadhaar" placeholder="1234 5678 9012">
-        </div>
-        <div class="auth-field">
-          <label for="reg-pan">PAN number</label>
-          <input type="text" id="reg-pan" placeholder="ABCDE1234F">
-        </div>
+        <button class="btn btn-primary btn-sm auth-btn" onclick="loginUser()">Log in</button>
+        <div id="login-status" class="auth-status"></div>
       </div>
-      <button class="btn btn-primary btn-sm auth-btn" onclick="registerUser()">Create account</button>
-      <div id="register-status" class="auth-status"></div>
+      <div id="register-form" class="auth-form hidden">
+        <div class="login-title">Create tenant account</div>
+        <div class="login-sub">Register first, then upload KYC documents and manage rent.</div>
+        <div class="auth-fields-grid">
+          <div class="auth-field">
+            <label for="reg-full-name">Full name</label>
+            <input type="text" id="reg-full-name" placeholder="Ananya Rao">
+          </div>
+          <div class="auth-field">
+            <label for="reg-email">Email</label>
+            <input type="email" id="reg-email" placeholder="you@example.com">
+          </div>
+          <div class="auth-field">
+            <label for="reg-phone">Phone</label>
+            <input type="tel" id="reg-phone" placeholder="+91 98xxxxxxxx">
+          </div>
+          <div class="auth-field">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" placeholder="••••••••">
+          </div>
+          <div class="auth-field">
+            <label for="reg-gender">Gender</label>
+            <select id="reg-gender">
+              <option value="">Select gender</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="auth-field">
+            <label for="reg-common-id">Common PG ID</label>
+            <input type="text" id="reg-common-id" placeholder="Enter common ID">
+          </div>
+          <div class="auth-field">
+            <label for="reg-aadhaar">Aadhaar number</label>
+            <input type="text" id="reg-aadhaar" placeholder="1234 5678 9012">
+          </div>
+          <div class="auth-field">
+            <label for="reg-pan">PAN number</label>
+            <input type="text" id="reg-pan" placeholder="ABCDE1234F">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm auth-btn" onclick="registerUser()">Create account</button>
+        <div id="register-status" class="auth-status"></div>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ============ SIDEBAR ============ -->
-<aside class="sidebar">
-  <div class="brand">
-    <div class="brand-mark">PG</div>
-    <div class="brand-text">
-      <div class="name">PG</div>
-      <div class="sub">Tenant Portal</div>
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">PG</div>
+      <div class="brand-text">
+        <div class="name">PG</div>
+        <div class="sub">Tenant Portal</div>
+      </div>
     </div>
-  </div>
 
-  <div class="nav-group-label">Overview</div>
-  <ul class="nav-list">
-    <li><button class="nav-btn active" data-tab="dashboard">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-      Dashboard
-    </button></li>
-  </ul>
+    <div class="nav-group-label">Overview</div>
+    <ul class="nav-list">
+      <li><button class="nav-btn active" data-tab="dashboard">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="9" />
+            <rect x="14" y="3" width="7" height="5" />
+            <rect x="14" y="12" width="7" height="9" />
+            <rect x="3" y="16" width="7" height="5" />
+          </svg>
+          Dashboard
+        </button></li>
+    </ul>
 
-  <div class="nav-group-label">Manage</div>
-  <ul class="nav-list">
-    <li><button class="nav-btn" data-tab="rent">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4"/></svg>
-      Rent &amp; Payments
-    </button></li>
-    <li><button class="nav-btn" data-tab="documents">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h3"/></svg>
-      Documents
-    </button></li>
-    <li><button class="nav-btn" data-tab="visitors">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Visitors
-    </button></li>
-    <li><button class="nav-btn" data-tab="feedback">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Feedback
-    </button></li>
-  </ul>
+    <div class="nav-group-label">Manage</div>
+    <ul class="nav-list">
+      <li><button class="nav-btn" data-tab="rent">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="14" rx="2" />
+            <path d="M2 10h20" />
+            <path d="M6 15h4" />
+          </svg>
+          Rent &amp; Payments
+        </button></li>
+      <li><button class="nav-btn" data-tab="documents">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+            <path d="M9 15h6M9 11h3" />
+          </svg>
+          Documents
+        </button></li>
+      <li><button class="nav-btn" data-tab="visitors">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          Visitors
+        </button></li>
+      <li><button class="nav-btn" data-tab="feedback">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Feedback
+        </button></li>
+    </ul>
 
-  <div class="nav-group-label">Account</div>
-  <ul class="nav-list">
-    <li><button class="nav-btn" data-tab="profile">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Profile
-    </button></li>
-  </ul>
+    <div class="nav-group-label">Account</div>
+    <ul class="nav-list">
+      <li><button class="nav-btn" data-tab="profile">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Profile
+        </button></li>
+    </ul>
 
-  <div class="sidebar-footer">
-    <div class="avatar-sm">AR</div>
-    <div class="who">
-      <div class="n">Ananya Rao</div>
-      <div class="r" id="sidebar-room-badge">Room — · Bed —</div>
-    </div>
-  </div>
-</aside>
-
-<!-- ============ MAIN ============ -->
-<div class="main">
-
-  <div class="topbar">
-    <div>
-      <div class="topbar-eyebrow" id="topbar-eyebrow">Tenant Portal</div>
-      <h1 id="topbar-title">Welcome back, Ananya</h1>
-    </div>
-    <div class="topbar-actions">
-      <button class="icon-btn" aria-label="Notifications"><span class="dot"></span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-      </button>
+    <div class="sidebar-footer">
       <div class="avatar-sm">AR</div>
+      <div class="who">
+        <div class="n">Ananya Rao</div>
+        <div class="r" id="sidebar-room-badge">Room — · Bed —</div>
+      </div>
     </div>
-  </div>
+  </aside>
 
-  <div class="content">
+  <!-- ============ MAIN ============ -->
+  <div class="main">
 
-    <!-- ================= DASHBOARD ================= -->
-    <section class="tab-section active" id="tab-dashboard">
-
-      <div class="hero-row">
-        <!-- Signature: Key Card -->
-        <div class="keycard">
-          <div class="keycard-top">
-            <div>
-              <div class="keycard-tag">Resident Card</div>
-              <div class="keycard-prop" id="keycard-prop">PG Residence</div>
-            </div>
-            <div class="keycard-status"><span class="pulse"></span>Checked In</div>
-          </div>
-          <div class="keycard-mid">
-            <div class="keycard-field"><div class="l">Room</div><div class="v" id="keycard-room">—</div></div>
-            <div class="keycard-field"><div class="l">Bed</div><div class="v" id="keycard-bed">—</div></div>
-            <div class="keycard-field"><div class="l">Floor</div><div class="v" id="keycard-floor">—</div></div>
-          </div>
-          <div class="keycard-bottom">
-            <div>
-              <div class="keycard-name" id="keycard-name">Ananya Rao</div>
-              <div class="keycard-since" id="keycard-since">RESIDENT SINCE 14 JAN 2026</div>
-              <div style="margin-top:6px; font-size:12px; color:var(--ink-400);">Next due: <span id="keycard-next-due">—</span></div>
-            </div>
-            <div class="barcode" aria-hidden="true">
-              <span style="height:14px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:26px"></span><span style="height:16px"></span><span style="height:24px"></span><span style="height:12px"></span><span style="height:20px"></span><span style="height:26px"></span><span style="height:14px"></span><span style="height:18px"></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="quick-stack">
-          <div class="quick-row">
-            <div class="stat-card c-amber">
-              <div class="stat-top">
-                <span class="stat-label">Rent Due</span>
-                <div class="stat-icon c-amber">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-              </div>
-              <div id="dashboard-rent-due-value" class="stat-value">₹9,500</div>
-              <div class="stat-foot"><span id="dashboard-rent-due-pill" class="pill p-amber">Due Jul 5</span></div>
-            </div>
-            <div class="stat-card c-green">
-              <div class="stat-top">
-                <span class="stat-label">KYC Status</span>
-                <div class="stat-icon c-green">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                </div>
-              </div>
-              <div class="stat-value" style="font-size:20px;">Verified</div>
-              <div class="stat-foot"><span class="pill p-green">All docs approved</span></div>
-            </div>
-            <div class="stat-card c-blue">
-              <div class="stat-top">
-                <span class="stat-label">Security Deposit</span>
-                <div class="stat-icon c-blue">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                </div>
-              </div>
-              <div class="stat-value">₹15,000</div>
-              <div class="stat-foot"><span class="pill p-blue">Held in escrow</span></div>
-            </div>
-          </div>
-
-          <div class="panel" style="padding:16px 18px;">
-            <div class="panel-head" style="margin-bottom:8px;">
-              <h3 style="font-size:13.5px;">Quick actions</h3>
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="btn btn-primary btn-sm" onclick="switchTab('rent')">Pay rent</button>
-              <button class="btn btn-outline btn-sm" onclick="switchTab('visitors')">Log a visitor</button>
-              <button class="btn btn-outline btn-sm" onclick="switchTab('feedback')">Raise a complaint</button>
-              <button class="btn btn-outline btn-sm" onclick="switchTab('documents')">View documents</button>
-            </div>
-          </div>
-        </div>
+    <div class="topbar">
+      <div>
+        <div class="topbar-eyebrow" id="topbar-eyebrow">Tenant Portal</div>
+        <h1 id="topbar-title">Welcome back, Ananya</h1>
       </div>
-
-      <div class="two-col">
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Recent payments</h3>
-            <button class="link-btn" onclick="switchTab('rent')">View all →</button>
-          </div>
-
-          <div id="dashboard-ledger-body">
-            <div class="ledger-row">
-              <div class="ledger-left">
-                <div class="ledger-dot" style="background:var(--amber-bg); color:var(--amber);">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                </div>
-                <div class="ledger-meta">
-                  <div class="m1">July 2026 rent</div>
-                  <div class="m2">Due 05 JUL 2026</div>
-                </div>
-              </div>
-              <div class="ledger-amt">₹9,500<span class="st" style="color:var(--amber);">Pending</span></div>
-            </div>
-
-            <div class="ledger-row">
-              <div class="ledger-left">
-                <div class="ledger-dot" style="background:var(--primary-100); color:var(--primary-700);">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                </div>
-                <div class="ledger-meta">
-                  <div class="m1">June 2026 rent</div>
-                  <div class="m2">Paid via UPI · 03 JUN 2026</div>
-                </div>
-              </div>
-              <div class="ledger-amt">₹9,500<span class="st" style="color:var(--primary-700);">Paid</span></div>
-            </div>
-
-            <div class="ledger-row">
-              <div class="ledger-left">
-                <div class="ledger-dot" style="background:var(--primary-100); color:var(--primary-700);">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                </div>
-                <div class="ledger-meta">
-                  <div class="m1">May 2026 rent</div>
-                  <div class="m2">Paid via Card · 04 MAY 2026</div>
-                </div>
-              </div>
-              <div class="ledger-amt">₹9,500<span class="st" style="color:var(--primary-700);">Paid</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head">
-            <h3>Recent activity</h3>
-          </div>
-
-          <div class="feed-item">
-            <div class="feed-icon" style="background:var(--amber-bg); color:var(--amber);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <div class="feed-text">
-              <div class="t1">July rent bill generated — due in 3 days</div>
-              <div class="t2">02 JUL 2026, 9:00 AM</div>
-            </div>
-          </div>
-
-          <div class="feed-item">
-            <div class="feed-icon" style="background:var(--blue-bg); color:var(--blue);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            </div>
-            <div class="feed-text">
-              <div class="t1">Visitor "Rahul Menon" checked in</div>
-              <div class="t2">29 JUN 2026, 6:40 PM</div>
-            </div>
-          </div>
-
-          <div class="feed-item">
-            <div class="feed-icon" style="background:var(--primary-100); color:var(--primary-700);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            </div>
-            <div class="feed-text">
-              <div class="t1">ID card document approved</div>
-              <div class="t2">22 JUN 2026, 11:15 AM</div>
-            </div>
-          </div>
-
-          <div class="feed-item">
-            <div class="feed-icon" style="background:var(--violet-bg); color:var(--violet);">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </div>
-            <div class="feed-text">
-              <div class="t1">Complaint "Water heater not working" resolved</div>
-              <div class="t2">18 JUN 2026, 4:05 PM</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= RENT & PAYMENTS ================= -->
-    <section class="tab-section" id="tab-rent">
-      <div class="stat-grid-4">
-        <div class="stat-card c-green">
-          <div class="stat-top"><span class="stat-label">Total Paid</span>
-            <div class="stat-icon c-green"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-          </div>
-          <div id="total-paid" class="stat-value">₹0</div>
-          <div class="stat-foot"><span id="total-paid-count" class="pill p-green">0 bills</span><span id="paid-status" class="delta up">Ready to pay</span></div>
-        </div>
-        <div class="stat-card c-amber">
-          <div class="stat-top"><span class="stat-label">Pending Amount</span>
-            <div class="stat-icon c-amber"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-          </div>
-          <div id="pending-amount" class="stat-value">₹0</div>
-          <div class="stat-foot"><span id="pending-count" class="pill p-amber">0 bills</span><span id="pending-due" class="delta" style="color:var(--ink-400);">No due date</span></div>
-        </div>
-        <div class="stat-card c-red">
-          <div class="stat-top"><span class="stat-label">Late Fees</span>
-            <div class="stat-icon c-red"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
-          </div>
-          <div id="late-fees" class="stat-value">₹0</div>
-          <div class="stat-foot"><span id="late-fees-status" class="pill p-neutral">Clean record</span></div>
-        </div>
-        <div class="stat-card c-blue">
-          <div class="stat-top"><span class="stat-label">Next Due Date</span>
-            <div class="stat-icon c-blue"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-          </div>
-          <div id="next-due-date" class="stat-value" style="font-size:20px;">—</div>
-          <div class="stat-foot"><span id="next-due-pill" class="pill p-blue">Upcoming</span></div>
-        </div>
-      </div>
-
-      <div class="section-title"><span>Payment history</span>
-        <button id="rent-pay-now-btn" class="btn btn-primary btn-sm" onclick="triggerRentPayment()">Pay ₹9,500 now</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Billing period</th>
-              <th class="mono">Due date</th>
-              <th class="mono">Amount</th>
-              <th>Method</th>
-              <th>Status</th>
-              <th class="mono">Receipt</th>
-            </tr>
-          </thead>
-          <tbody id="rent-table-body">
-            <tr>
-              <td colspan="6" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No payments have been made yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ================= DOCUMENTS ================= -->
-    <section class="tab-section" id="tab-documents">
-      <div class="section-title"><span>KYC documents</span></div>
-      <div class="doc-grid">
-        <div class="doc-card">
-          <div class="doc-icon" style="background:var(--primary-100); color:var(--primary-700);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          </div>
-          <div>
-            <div class="doc-title">Aadhaar Card</div>
-            <div class="doc-desc">Government identity proof used for KYC.</div>
-          </div>
-          <div class="doc-foot">
-            <span class="status-badge pending" id="aadhaar-status"><span class="dot"></span>Pending</span>
-            <button class="btn btn-outline btn-sm" id="aadhaar-view-btn" onclick="viewKyc('aadhaar')">View</button>
-          </div>
-        </div>
-
-        <div class="doc-card">
-          <div class="doc-icon" style="background:var(--primary-100); color:var(--primary-700);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          </div>
-          <div>
-            <div class="doc-title">PAN Card</div>
-            <div class="doc-desc">Tax identity document required for rent processing.</div>
-          </div>
-          <div class="doc-foot">
-            <span class="status-badge pending" id="pan-status"><span class="dot"></span>Pending</span>
-            <button class="btn btn-outline btn-sm" id="pan-view-btn" onclick="viewKyc('pan')">View</button>
-          </div>
-        </div>
-
-        <div class="doc-card">
-          <div class="doc-icon" style="background:var(--amber-bg); color:var(--amber);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          </div>
-          <div>
-            <div class="doc-title">College / Work ID</div>
-            <div class="doc-desc">Institution or employer ID for residency verification.</div>
-          </div>
-          <div class="doc-foot">
-            <span class="status-badge pending" id="idcard-status"><span class="dot"></span>Pending</span>
-            <button class="btn btn-outline btn-sm" id="idcard-view-btn" onclick="viewKyc('id_card')">View</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="margin-top:20px;">
-        <div class="panel-head"><h3>Upload KYC documents</h3></div>
-        <div class="form-grid" style="margin-bottom:0;">
-          <div class="field">
-            <label for="aadhaar-file">Aadhaar PDF</label>
-            <input type="file" id="aadhaar-file" accept="application/pdf">
-          </div>
-          <div class="field">
-            <label for="pan-file">PAN PDF</label>
-            <input type="file" id="pan-file" accept="application/pdf">
-          </div>
-          <div class="field">
-            <label for="idcard-file">ID card PDF</label>
-            <input type="file" id="idcard-file" accept="application/pdf">
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="uploadKycDocs()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Upload documents
+      <div class="topbar-actions">
+        <button class="icon-btn" aria-label="Notifications"><span class="dot"></span>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
         </button>
-        <div id="kyc-status" class="auth-status" style="margin-top:14px;"></div>
+        <div class="avatar-sm">AR</div>
       </div>
-    </section>
+    </div>
 
-    <!-- ================= VISITORS ================= -->
-    <section class="tab-section" id="tab-visitors">
-      <div class="form-panel">
-        <div class="panel-head"><h3>Log a new visitor</h3></div>
-        <div class="form-grid">
-          <div class="field">
-            <label for="v-name">Visitor name</label>
-            <input type="text" id="v-name" placeholder="e.g. Rahul Menon">
+    <div class="content">
+
+      <!-- ================= DASHBOARD ================= -->
+      <section class="tab-section active" id="tab-dashboard">
+
+        <div class="hero-row">
+          <!-- Signature: Key Card -->
+          <div class="keycard">
+            <div class="keycard-top">
+              <div>
+                <div class="keycard-tag">Resident Card</div>
+                <div class="keycard-prop" id="keycard-prop">PG Residence</div>
+              </div>
+              <div class="keycard-status"><span class="pulse"></span>Checked In</div>
+            </div>
+            <div class="keycard-mid">
+              <div class="keycard-field">
+                <div class="l">Room ID</div>
+                <div class="v" id="keycard-room">—</div>
+              </div>
+              <div class="keycard-field">
+                <div class="l">Bed ID</div>
+                <div class="v" id="keycard-bed">—</div>
+              </div>
+            </div>
+            <div class="keycard-bottom">
+              <div>
+                <div class="keycard-name" id="keycard-name">Ananya Rao</div>
+                <div class="keycard-since" id="keycard-since">RESIDENT SINCE 14 JAN 2026</div>
+                <div style="margin-top:6px; font-size:12px; color:var(--ink-400);">Next due: <span
+                    id="keycard-next-due">—</span></div>
+              </div>
+              <div class="barcode" aria-hidden="true">
+                <span style="height:14px"></span><span style="height:22px"></span><span style="height:10px"></span><span
+                  style="height:26px"></span><span style="height:16px"></span><span style="height:24px"></span><span
+                  style="height:12px"></span><span style="height:20px"></span><span style="height:26px"></span><span
+                  style="height:14px"></span><span style="height:18px"></span>
+              </div>
+            </div>
           </div>
-          <div class="field">
-            <label for="v-phone">Phone number</label>
-            <input type="tel" id="v-phone" placeholder="+91 98xxxxxxxx">
-          </div>
-          <div class="field full">
-            <label for="v-purpose">Purpose of visit</label>
-            <input type="text" id="v-purpose" placeholder="e.g. Family visit, delivery pickup">
+
+          <div class="quick-stack">
+            <div class="quick-row">
+              <div class="stat-card c-amber">
+                <div class="stat-top">
+                  <span class="stat-label">Rent Due</span>
+                  <div class="stat-icon c-amber">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                </div>
+                <div id="dashboard-rent-due-value" class="stat-value">₹9,500</div>
+                <div class="stat-foot"><span id="dashboard-rent-due-pill" class="pill p-amber">Due Jul 5</span></div>
+              </div>
+              <div class="stat-card c-green">
+                <div class="stat-top">
+                  <span class="stat-label">KYC Status</span>
+                  <div class="stat-icon c-green">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="stat-value" style="font-size:20px;">Verified</div>
+                <div class="stat-foot"><span class="pill p-green">All docs approved</span></div>
+              </div>
+              <div class="stat-card c-blue">
+                <div class="stat-top">
+                  <span class="stat-label">Security Deposit</span>
+                  <div class="stat-icon c-blue">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="stat-value">₹15,000</div>
+                <div class="stat-foot"><span class="pill p-blue">Held in escrow</span></div>
+              </div>
+            </div>
+
+            <div class="panel" style="padding:16px 18px;">
+              <div class="panel-head" style="margin-bottom:8px;">
+                <h3 style="font-size:13.5px;">Quick actions</h3>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary btn-sm" onclick="switchTab('rent')">Pay rent</button>
+                <button class="btn btn-outline btn-sm" onclick="switchTab('visitors')">Log a visitor</button>
+                <button class="btn btn-outline btn-sm" onclick="switchTab('feedback')">Raise a complaint</button>
+                <button class="btn btn-outline btn-sm" onclick="switchTab('documents')">View documents</button>
+              </div>
+            </div>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="submitVisitor()">Notify front desk</button>
-      </div>
 
-      <div class="section-title"><span>Visitor history</span></div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Visitor</th>
-              <th>Purpose</th>
-              <th class="mono">Entry</th>
-              <th class="mono">Exit</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="visitor-table-body">
-            <tr><td colspan="5" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No visitors logged.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Recent payments</h3>
+              <button class="link-btn" onclick="switchTab('rent')">View all →</button>
+            </div>
 
-    <!-- ================= FEEDBACK ================= -->
-    <section class="tab-section" id="tab-feedback">
-      <div class="form-panel">
-        <div class="panel-head"><h3>Raise a complaint</h3></div>
-        <div class="form-grid">
-          <div class="field full">
-            <label for="f-title">Title</label>
-            <input type="text" id="f-title" placeholder="e.g. Water heater not working">
+            <div id="dashboard-ledger-body">
+              <div class="ledger-row">
+                <div class="ledger-left">
+                  <div class="ledger-dot" style="background:var(--amber-bg); color:var(--amber);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </div>
+                  <div class="ledger-meta">
+                    <div class="m1">July 2026 rent</div>
+                    <div class="m2">Due 05 JUL 2026</div>
+                  </div>
+                </div>
+                <div class="ledger-amt">₹9,500<span class="st" style="color:var(--amber);">Pending</span></div>
+              </div>
+
+              <div class="ledger-row">
+                <div class="ledger-left">
+                  <div class="ledger-dot" style="background:var(--primary-100); color:var(--primary-700);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                  <div class="ledger-meta">
+                    <div class="m1">June 2026 rent</div>
+                    <div class="m2">Paid via UPI · 03 JUN 2026</div>
+                  </div>
+                </div>
+                <div class="ledger-amt">₹9,500<span class="st" style="color:var(--primary-700);">Paid</span></div>
+              </div>
+
+              <div class="ledger-row">
+                <div class="ledger-left">
+                  <div class="ledger-dot" style="background:var(--primary-100); color:var(--primary-700);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  </div>
+                  <div class="ledger-meta">
+                    <div class="m1">May 2026 rent</div>
+                    <div class="m2">Paid via Card · 04 MAY 2026</div>
+                  </div>
+                </div>
+                <div class="ledger-amt">₹9,500<span class="st" style="color:var(--primary-700);">Paid</span></div>
+              </div>
+            </div>
           </div>
-          <div class="field full">
-            <label for="f-desc">Description</label>
-            <textarea id="f-desc" placeholder="Describe the issue in detail…"></textarea>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Recent activity</h3>
+            </div>
+
+            <div class="feed-item">
+              <div class="feed-icon" style="background:var(--amber-bg); color:var(--amber);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <div class="feed-text">
+                <div class="t1">July rent bill generated — due in 3 days</div>
+                <div class="t2">02 JUL 2026, 9:00 AM</div>
+              </div>
+            </div>
+
+            <div class="feed-item">
+              <div class="feed-icon" style="background:var(--blue-bg); color:var(--blue);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                </svg>
+              </div>
+              <div class="feed-text">
+                <div class="t1">Visitor "Rahul Menon" checked in</div>
+                <div class="t2">29 JUN 2026, 6:40 PM</div>
+              </div>
+            </div>
+
+            <div class="feed-item">
+              <div class="feed-icon" style="background:var(--primary-100); color:var(--primary-700);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+              </div>
+              <div class="feed-text">
+                <div class="t1">ID card document approved</div>
+                <div class="t2">22 JUN 2026, 11:15 AM</div>
+              </div>
+            </div>
+
+            <div class="feed-item">
+              <div class="feed-icon" style="background:var(--violet-bg); color:var(--violet);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+              <div class="feed-text">
+                <div class="t1">Complaint "Water heater not working" resolved</div>
+                <div class="t2">18 JUN 2026, 4:05 PM</div>
+              </div>
+            </div>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="submitFeedback()">Submit complaint</button>
-      </div>
+      </section>
 
-      <div class="section-title"><span>Your complaints</span></div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th class="mono">Raised on</th>
-              <th>Status</th>
-              <th class="mono">Resolved on</th>
-            </tr>
-          </thead>
-          <tbody id="feedback-table-body">
-            <tr><td colspan="4" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No complaints yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ================= PROFILE ================= -->
-    <section class="tab-section" id="tab-profile">
-      <div class="profile-grid">
-        <div class="profile-card">
-          <div class="profile-avatar">AR</div>
-          <div class="p-name" id="profile-name">Ananya Rao</div>
-          <div class="p-role" id="profile-role">Tenant · Room —, Bed —</div>
-          <button class="btn btn-outline btn-sm" style="width:100%; justify-content:center;" onclick="toggleProfileEdit()">Edit profile</button>
+      <!-- ================= RENT & PAYMENTS ================= -->
+      <section class="tab-section" id="tab-rent">
+        <div class="stat-grid-4">
+          <div class="stat-card c-green">
+            <div class="stat-top"><span class="stat-label">Total Paid</span>
+              <div class="stat-icon c-green"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg></div>
+            </div>
+            <div id="total-paid" class="stat-value">₹0</div>
+            <div class="stat-foot"><span id="total-paid-count" class="pill p-green">0 bills</span><span id="paid-status"
+                class="delta up">Ready to pay</span></div>
+          </div>
+          <div class="stat-card c-amber">
+            <div class="stat-top"><span class="stat-label">Pending Amount</span>
+              <div class="stat-icon c-amber"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg></div>
+            </div>
+            <div id="pending-amount" class="stat-value">₹0</div>
+            <div class="stat-foot"><span id="pending-count" class="pill p-amber">0 bills</span><span id="pending-due"
+                class="delta" style="color:var(--ink-400);">No due date</span></div>
+          </div>
+          <div class="stat-card c-red">
+            <div class="stat-top"><span class="stat-label">Late Fees</span>
+              <div class="stat-icon c-red"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg></div>
+            </div>
+            <div id="late-fees" class="stat-value">₹0</div>
+            <div class="stat-foot"><span id="late-fees-status" class="pill p-neutral">Clean record</span></div>
+          </div>
+          <div class="stat-card c-blue">
+            <div class="stat-top"><span class="stat-label">Next Due Date</span>
+              <div class="stat-icon c-blue"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <line x1="16" y1="2" x2="16" y2="6" />
+                  <line x1="8" y1="2" x2="8" y2="6" />
+                  <line x1="3" y1="10" x2="21" y2="10" />
+                </svg></div>
+            </div>
+            <div id="next-due-date" class="stat-value" style="font-size:20px;">—</div>
+            <div class="stat-foot"><span id="next-due-pill" class="pill p-blue">Upcoming</span></div>
+          </div>
         </div>
 
-        <div class="panel" id="profile-edit-panel">
-          <div class="panel-head"><h3>Edit profile</h3></div>
+        <div class="section-title"><span>Payment history</span>
+          <button id="rent-pay-now-btn" class="btn btn-primary btn-sm" onclick="triggerRentPayment()">Pay ₹9,500
+            now</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Billing period</th>
+                <th class="mono">Due date</th>
+                <th class="mono">Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th class="mono">Receipt</th>
+              </tr>
+            </thead>
+            <tbody id="rent-table-body">
+              <tr>
+                <td colspan="6" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No
+                  payments have been made yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= DOCUMENTS ================= -->
+      <section class="tab-section" id="tab-documents">
+        <div class="section-title"><span>KYC documents</span></div>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <div class="doc-icon" style="background:var(--primary-100); color:var(--primary-700);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+              </svg>
+            </div>
+            <div>
+              <div class="doc-title">Aadhaar Card</div>
+              <div class="doc-desc">Government identity proof used for KYC.</div>
+            </div>
+            <div class="doc-foot">
+              <span class="status-badge pending" id="aadhaar-status"><span class="dot"></span>Pending</span>
+              <button class="btn btn-outline btn-sm" id="aadhaar-view-btn" onclick="viewKyc('aadhaar')">View</button>
+            </div>
+          </div>
+
+          <div class="doc-card">
+            <div class="doc-icon" style="background:var(--primary-100); color:var(--primary-700);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+              </svg>
+            </div>
+            <div>
+              <div class="doc-title">PAN Card</div>
+              <div class="doc-desc">Tax identity document required for rent processing.</div>
+            </div>
+            <div class="doc-foot">
+              <span class="status-badge pending" id="pan-status"><span class="dot"></span>Pending</span>
+              <button class="btn btn-outline btn-sm" id="pan-view-btn" onclick="viewKyc('pan')">View</button>
+            </div>
+          </div>
+
+          <div class="doc-card">
+            <div class="doc-icon" style="background:var(--amber-bg); color:var(--amber);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <path d="M14 2v6h6" />
+              </svg>
+            </div>
+            <div>
+              <div class="doc-title">College / Work ID</div>
+              <div class="doc-desc">Institution or employer ID for residency verification.</div>
+            </div>
+            <div class="doc-foot">
+              <span class="status-badge pending" id="idcard-status"><span class="dot"></span>Pending</span>
+              <button class="btn btn-outline btn-sm" id="idcard-view-btn" onclick="viewKyc('id_card')">View</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:20px;">
+          <div class="panel-head">
+            <h3>Upload KYC documents</h3>
+          </div>
+          <div class="form-grid" style="margin-bottom:0;">
+            <div class="field">
+              <label for="aadhaar-file">Aadhaar PDF</label>
+              <input type="file" id="aadhaar-file" accept="application/pdf">
+            </div>
+            <div class="field">
+              <label for="pan-file">PAN PDF</label>
+              <input type="file" id="pan-file" accept="application/pdf">
+            </div>
+            <div class="field">
+              <label for="idcard-file">ID card PDF</label>
+              <input type="file" id="idcard-file" accept="application/pdf">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="uploadKycDocs()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Upload documents
+          </button>
+          <div id="kyc-status" class="auth-status" style="margin-top:14px;"></div>
+        </div>
+      </section>
+
+      <!-- ================= VISITORS ================= -->
+      <section class="tab-section" id="tab-visitors">
+        <div class="form-panel">
+          <div class="panel-head">
+            <h3>Log a new visitor</h3>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="v-name">Visitor name</label>
+              <input type="text" id="v-name" placeholder="e.g. Rahul Menon">
+            </div>
+            <div class="field">
+              <label for="v-phone">Phone number</label>
+              <input type="tel" id="v-phone" placeholder="+91 98xxxxxxxx">
+            </div>
+            <div class="field full">
+              <label for="v-purpose">Purpose of visit</label>
+              <input type="text" id="v-purpose" placeholder="e.g. Family visit, delivery pickup">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="submitVisitor()">Notify front desk</button>
+        </div>
+
+        <div class="section-title"><span>Visitor history</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Visitor</th>
+                <th>Purpose</th>
+                <th class="mono">Entry</th>
+                <th class="mono">Exit</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="visitor-table-body">
+              <tr>
+                <td colspan="5" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No
+                  visitors logged.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= FEEDBACK ================= -->
+      <section class="tab-section" id="tab-feedback">
+        <div class="form-panel">
+          <div class="panel-head">
+            <h3>Raise a complaint</h3>
+          </div>
           <div class="form-grid">
             <div class="field full">
-              <label for="tenant-name">Full name</label>
-              <input type="text" id="tenant-name" placeholder="e.g. Ananya Rao">
+              <label for="f-title">Title</label>
+              <input type="text" id="f-title" placeholder="e.g. Water heater not working">
             </div>
             <div class="field full">
-              <label for="tenant-email">Email</label>
-              <input type="email" id="tenant-email" placeholder="e.g. ananya.rao@email.com">
-            </div>
-            <div class="field full">
-              <label for="tenant-phone">Phone</label>
-              <input type="tel" id="tenant-phone" placeholder="+91 98xxxxxxxx">
-            </div>
-            <div class="field full">
-              <label for="tenant-gender">Gender</label>
-              <select id="tenant-gender">
-                <option value="">Select gender</option>
-                <option value="Female">Female</option>
-                <option value="Male">Male</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div class="field full">
-              <label for="tenant-common-id">Common PG ID</label>
-              <input type="text" id="tenant-common-id" placeholder="Enter common ID">
-            </div>
-            <div class="field full">
-              <label for="tenant-aadhaar">Aadhaar number</label>
-              <input type="text" id="tenant-aadhaar" placeholder="1234 5678 9012">
-            </div>
-            <div class="field full">
-              <label for="tenant-pan">PAN number</label>
-              <input type="text" id="tenant-pan" placeholder="ABCDE1234F">
-            </div>
-            <div class="field full">
-              <label for="tenant-address">Address</label>
-              <input type="text" id="tenant-address" placeholder="Enter address">
-            </div>
-            <div class="field full">
-              <label for="tenant-emergency-name">Emergency contact name</label>
-              <input type="text" id="tenant-emergency-name" placeholder="Emergency contact name">
-            </div>
-            <div class="field full">
-              <label for="tenant-emergency-phone">Emergency contact phone</label>
-              <input type="tel" id="tenant-emergency-phone" placeholder="+91 98xxxxxxxx">
+              <label for="f-desc">Description</label>
+              <textarea id="f-desc" placeholder="Describe the issue in detail…"></textarea>
             </div>
           </div>
-          <button class="btn btn-primary btn-sm" onclick="saveProfileChanges()">Save profile</button>
-          <div id="tenant-create-status" class="info-row" style="margin-top:16px; color:var(--ink-600);"></div>
+          <button class="btn btn-primary btn-sm" onclick="submitFeedback()">Submit complaint</button>
         </div>
 
-        <div class="panel">
-          <div class="panel-head"><h3>Personal details</h3></div>
-          <div class="info-row"><span class="k">Full name</span><span class="v" id="detail-full-name">Ananya Rao</span></div>
-          <div class="info-row"><span class="k">Email</span><span class="v" id="detail-email">ananya.rao@email.com</span></div>
-          <div class="info-row"><span class="k">Phone</span><span class="v" id="detail-phone">+91 98450 12233</span></div>
-          <div class="info-row"><span class="k">Gender</span><span class="v" id="detail-gender">Female</span></div>
-          <div class="info-row"><span class="k">Aadhaar number</span><span class="v">XXXX XXXX 4821</span></div>
-          <div class="info-row"><span class="k">PAN number</span><span class="v">ABCXX1234D</span></div>
-          <div class="info-row"><span class="k">Address</span><span class="v">42, Lake View Colony, Bengaluru</span></div>
-          <div class="info-row"><span class="k">Emergency contact</span><span class="v">Sunita Rao · +91 98450 99887</span></div>
-          <div class="info-row"><span class="k">Check-in date</span><span class="v" id="detail-checkin">14 Jan 2026</span></div>
-          <div class="info-row"><span class="k">Security deposit</span><span class="v">₹15,000</span></div>
-        </div>
-      </div>
-    </section>
+        <div class="section-title"><span>Your complaints</span></div>
 
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th class="mono">Raised on</th>
+                <th>Status</th>
+                <th class="mono">Resolved on</th>
+              </tr>
+            </thead>
+            <tbody id="feedback-table-body">
+              <tr>
+                <td colspan="4" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No
+                  complaints yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================= PROFILE ================= -->
+      <section class="tab-section" id="tab-profile">
+        <div class="profile-grid">
+          <div class="profile-card">
+            <div class="profile-avatar">AR</div>
+            <div class="p-name" id="profile-name">Ananya Rao</div>
+            <div class="p-role" id="profile-role">Tenant · Room —, Bed —</div>
+            <button class="btn btn-outline btn-sm" style="width:100%; justify-content:center;"
+              onclick="toggleProfileEdit()">Edit profile</button>
+          </div>
+
+          <div class="panel" id="profile-edit-panel">
+            <div class="panel-head">
+              <h3>Edit profile</h3>
+            </div>
+            <div class="form-grid">
+              <div class="field full">
+                <label for="tenant-name">Full name</label>
+                <input type="text" id="tenant-name" placeholder="e.g. Ananya Rao">
+              </div>
+              <div class="field full">
+                <label for="tenant-email">Email</label>
+                <input type="email" id="tenant-email" placeholder="e.g. ananya.rao@email.com">
+              </div>
+              <div class="field full">
+                <label for="tenant-phone">Phone</label>
+                <input type="tel" id="tenant-phone" placeholder="+91 98xxxxxxxx">
+              </div>
+              <div class="field full">
+                <label for="tenant-gender">Gender</label>
+                <select id="tenant-gender">
+                  <option value="">Select gender</option>
+                  <option value="Female">Female</option>
+                  <option value="Male">Male</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="tenant-common-id">Common PG ID</label>
+                <input type="text" id="tenant-common-id" placeholder="Enter common ID">
+              </div>
+              <div class="field full">
+                <label for="tenant-aadhaar">Aadhaar number</label>
+                <input type="text" id="tenant-aadhaar" placeholder="1234 5678 9012">
+              </div>
+              <div class="field full">
+                <label for="tenant-pan">PAN number</label>
+                <input type="text" id="tenant-pan" placeholder="ABCDE1234F">
+              </div>
+              <div class="field full">
+                <label for="tenant-address">Address</label>
+                <input type="text" id="tenant-address" placeholder="Enter address">
+              </div>
+              <div class="field full">
+                <label for="tenant-emergency-name">Emergency contact name</label>
+                <input type="text" id="tenant-emergency-name" placeholder="Emergency contact name">
+              </div>
+              <div class="field full">
+                <label for="tenant-emergency-phone">Emergency contact phone</label>
+                <input type="tel" id="tenant-emergency-phone" placeholder="+91 98xxxxxxxx">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="saveProfileChanges()">Save profile</button>
+            <div id="tenant-create-status" class="info-row" style="margin-top:16px; color:var(--ink-600);"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Personal details</h3>
+            </div>
+            <div class="info-row"><span class="k">Full name</span><span class="v" id="detail-full-name">Ananya
+                Rao</span></div>
+            <div class="info-row"><span class="k">Email</span><span class="v"
+                id="detail-email">ananya.rao@email.com</span></div>
+            <div class="info-row"><span class="k">Phone</span><span class="v" id="detail-phone">+91 98450 12233</span>
+            </div>
+            <div class="info-row"><span class="k">Gender</span><span class="v" id="detail-gender">Female</span></div>
+            <div class="info-row"><span class="k">Aadhaar number</span><span class="v">XXXX XXXX 4821</span></div>
+            <div class="info-row"><span class="k">PAN number</span><span class="v">ABCXX1234D</span></div>
+            <div class="info-row"><span class="k">Address</span><span class="v">42, Lake View Colony, Bengaluru</span>
+            </div>
+            <div class="info-row"><span class="k">Emergency contact</span><span class="v">Sunita Rao · +91 98450
+                99887</span></div>
+            <div class="info-row"><span class="k">Check-in date</span><span class="v" id="detail-checkin">14 Jan
+                2026</span></div>
+            <div class="info-row"><span class="k">Security deposit</span><span class="v">₹15,000</span></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
   </div>
-</div>
 
-<script>
-  const buttons = document.querySelectorAll('.nav-btn');
-  const sections = document.querySelectorAll('.tab-section');
+  <script>
+    const buttons = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.tab-section');
 
-  const titles = {
-    dashboard: { eyebrow: 'Tenant Portal', title: 'Welcome back' },
-    rent: { eyebrow: 'Finance', title: 'Rent & Payments' },
-    documents: { eyebrow: 'Verification', title: 'Documents & KYC' },
-    visitors: { eyebrow: 'Access', title: 'Visitors' },
-    feedback: { eyebrow: 'Support', title: 'Feedback & Complaints' },
-    profile: { eyebrow: 'Account', title: 'My Profile' },
-  };
-
-  let currentTenantId = null;
-  let currentUser = null;
-  let currentLoginDate = null;
-  let currentTenantDetails = null;
-  let isProfileEditOpen = false;
-  const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
-    ? 'http://127.0.0.1:8000'
-    : 'https://tenant-management-o5p9.onrender.com';
-  const RENT_AMOUNT = 9500;
-  let rentHistory = [];
-
-  document.getElementById('topbar-eyebrow').textContent = titles.dashboard.eyebrow;
-  document.getElementById('topbar-title').textContent = titles.dashboard.title;
-
-  function switchTab(tab) {
-    sections.forEach(section => section.classList.toggle('active', section.id === `tab-${tab}`));
-    buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-    document.getElementById('topbar-eyebrow').textContent = titles[tab]?.eyebrow || titles.dashboard.eyebrow;
-    document.getElementById('topbar-title').textContent = titles[tab]?.title || titles.dashboard.title;
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }
-
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-  });
-
-  function switchAuthTab(tab) {
-    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
-    document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
-    document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
-    document.getElementById('login-status').textContent = '';
-    document.getElementById('register-status').textContent = '';
-  }
-
-  function showApp() {
-    document.body.classList.remove('logged-out');
-    document.getElementById('login-screen').style.display = 'none';
-    updateUserDisplay();
-    if (currentTenantId) {
-      refreshTenantDetails();
-      refreshRentData();
-      refreshKycStatus();
-      refreshFeedbackHistory();
-      refreshVisitorHistory();
-    }
-  }
-
-  function toggleProfileEdit() {
-    isProfileEditOpen = !isProfileEditOpen;
-    const panel = document.getElementById('profile-edit-panel');
-    if (panel) {
-      panel.style.display = isProfileEditOpen ? 'block' : 'none';
-    }
-    const button = document.querySelector('#tab-profile .btn-outline');
-    if (button) {
-      button.textContent = isProfileEditOpen ? 'Cancel edit' : 'Edit profile';
-    }
-  }
-
-  function updateUserDisplay() {
-    if (!currentUser) return;
-    const name = currentUser.full_name || 'Tenant';
-    document.getElementById('topbar-title').textContent = `Welcome back, ${name}`;
-    const initials = name.split(' ').map(part => part[0]).join('').slice(0,2).toUpperCase();
-    document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
-    const sidebarName = document.querySelector('.sidebar-footer .n');
-    const sidebarRole = document.querySelector('.sidebar-footer .r');
-    if (sidebarName) sidebarName.textContent = name;
-    if (sidebarRole) sidebarRole.textContent = currentUser.role === 'tenant' ? `Tenant · ID ${currentTenantId || '—'}` : currentUser.role;
-    // Update resident card and profile sections
-    const keycardNameEl = document.getElementById('keycard-name');
-    if (keycardNameEl) keycardNameEl.textContent = name;
-    const profileNameEl = document.getElementById('profile-name');
-    if (profileNameEl) profileNameEl.textContent = name;
-    document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
-    const profileAvatarEl = document.querySelector('.profile-avatar');
-    if (profileAvatarEl) profileAvatarEl.textContent = initials;
-    const detailFullNameEl = document.getElementById('detail-full-name');
-    if (detailFullNameEl) detailFullNameEl.textContent = name;
-    const detailEmailEl = document.getElementById('detail-email');
-    const detailPhoneEl = document.getElementById('detail-phone');
-    const detailGenderEl = document.getElementById('detail-gender');
-    if (detailEmailEl) detailEmailEl.textContent = currentTenantDetails?.email || currentUser?.email || '—';
-    if (detailPhoneEl) detailPhoneEl.textContent = currentTenantDetails?.phone || currentUser?.phone || '—';
-    if (detailGenderEl) detailGenderEl.textContent = currentTenantDetails?.gender || '—';
-    // Resident since / check-in date from login timestamp
-    const sinceEl = document.getElementById('keycard-since');
-    const checkinEl = document.getElementById('detail-checkin');
-    const baseDate = currentLoginDate || new Date();
-    const fmt = baseDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
-    if (sinceEl) sinceEl.textContent = `RESIDENT SINCE ${fmt}`;
-    if (checkinEl) checkinEl.textContent = fmt;
-  }
-
-  async function refreshTenantDetails() {
-    if (!currentTenantId) return;
-    try {
-      const res = await fetch(`${API_BASE}/tenants/${currentTenantId}`);
-      if (!res.ok) throw new Error('Unable to fetch tenant details');
-      currentTenantDetails = await res.json();
-      const roomBadge = document.getElementById('sidebar-room-badge');
-      const profileRole = document.getElementById('profile-role');
-      const keycardRoom = document.getElementById('keycard-room');
-      const keycardBed = document.getElementById('keycard-bed');
-      const keycardFloor = document.getElementById('keycard-floor');
-      const roomNumber = currentTenantDetails?.room_number;
-      const bedNumber = currentTenantDetails?.bed_number;
-      const roomLabel = roomNumber ? `${roomNumber}` : 'Not assigned';
-      const bedLabel = bedNumber ? `${bedNumber}` : 'Not assigned';
-      const floorLabel = roomNumber ? `${roomNumber}` : '—';
-      if (roomBadge) roomBadge.textContent = roomNumber || bedNumber ? `Room ${roomLabel} · Bed ${bedLabel}` : 'Room not assigned';
-      if (profileRole) profileRole.textContent = roomNumber || bedNumber ? `Tenant · Room ${roomLabel}, Bed ${bedLabel}` : 'Tenant · Room not assigned';
-      if (keycardRoom) keycardRoom.textContent = roomNumber ? roomLabel : '—';
-      if (keycardBed) keycardBed.textContent = bedNumber ? bedLabel : '—';
-      if (keycardFloor) keycardFloor.textContent = roomNumber ? floorLabel : '—';
-
-      const tenantName = document.getElementById('tenant-name');
-      const tenantEmail = document.getElementById('tenant-email');
-      const tenantPhone = document.getElementById('tenant-phone');
-      const tenantGender = document.getElementById('tenant-gender');
-      const tenantCommonId = document.getElementById('tenant-common-id');
-      const tenantAadhaar = document.getElementById('tenant-aadhaar');
-      const tenantPan = document.getElementById('tenant-pan');
-      const tenantAddress = document.getElementById('tenant-address');
-      const tenantEmergencyName = document.getElementById('tenant-emergency-name');
-      const tenantEmergencyPhone = document.getElementById('tenant-emergency-phone');
-      if (tenantName) tenantName.value = currentTenantDetails?.full_name || '';
-      if (tenantEmail) tenantEmail.value = currentTenantDetails?.email || '';
-      if (tenantPhone) tenantPhone.value = currentTenantDetails?.phone || '';
-      if (tenantGender) tenantGender.value = currentTenantDetails?.gender || '';
-      if (tenantCommonId) tenantCommonId.value = currentTenantDetails?.common_id || '';
-      if (tenantAadhaar) tenantAadhaar.value = currentTenantDetails?.aadhaar_number || '';
-      if (tenantPan) tenantPan.value = currentTenantDetails?.pan_number || '';
-      if (tenantAddress) tenantAddress.value = currentTenantDetails?.address || '';
-      if (tenantEmergencyName) tenantEmergencyName.value = currentTenantDetails?.emergency_contact_name || '';
-      if (tenantEmergencyPhone) tenantEmergencyPhone.value = currentTenantDetails?.emergency_contact_phone || '';
-      updateUserDisplay();
-    } catch (err) {
-      console.error('Error fetching tenant details', err);
-    }
-  }
-
-  async function saveProfileChanges() {
-    if (!currentTenantId) {
-      alert('Please login first.');
-      return;
-    }
-
-    const statusEl = document.getElementById('tenant-create-status');
-    const payload = {
-      full_name: document.getElementById('tenant-name').value.trim(),
-      email: document.getElementById('tenant-email').value.trim(),
-      phone: document.getElementById('tenant-phone').value.trim(),
-      gender: document.getElementById('tenant-gender').value,
-      common_id: document.getElementById('tenant-common-id').value.trim(),
-      aadhaar_number: document.getElementById('tenant-aadhaar').value.trim(),
-      pan_number: document.getElementById('tenant-pan').value.trim(),
-      address: document.getElementById('tenant-address').value.trim(),
-      emergency_contact_name: document.getElementById('tenant-emergency-name').value.trim(),
-      emergency_contact_phone: document.getElementById('tenant-emergency-phone').value.trim(),
+    const titles = {
+      dashboard: { eyebrow: 'Tenant Portal', title: 'Welcome back' },
+      rent: { eyebrow: 'Finance', title: 'Rent & Payments' },
+      documents: { eyebrow: 'Verification', title: 'Documents & KYC' },
+      visitors: { eyebrow: 'Access', title: 'Visitors' },
+      feedback: { eyebrow: 'Support', title: 'Feedback & Complaints' },
+      profile: { eyebrow: 'Account', title: 'My Profile' },
     };
 
-    try {
-      const res = await fetch(`${API_BASE}/update-tenant/${currentTenantId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      if (!res.ok) {
-        const result = await res.json().catch(() => null);
-        throw new Error(result?.detail || result?.error || 'Profile update failed');
-      }
-      statusEl.textContent = 'Profile updated successfully.';
-      await refreshTenantDetails();
-      toggleProfileEdit();
-    } catch (err) {
-      console.error(err);
-      if (statusEl) statusEl.textContent = err.message || 'Profile update failed.';
-    }
-  }
+    let currentTenantId = null;
+    let currentUser = null;
+    let currentLoginDate = null;
+    let currentTenantDetails = null;
+    let isProfileEditOpen = false;
+    const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
+      ? 'http://127.0.0.1:8000'
+      : 'https://tenant-management-o5p9.onrender.com';
+    const RENT_AMOUNT = 9500;
+    let rentHistory = [];
 
-  async function loginUser() {
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value.trim();
-    const status = document.getElementById('login-status');
+    document.getElementById('topbar-eyebrow').textContent = titles.dashboard.eyebrow;
+    document.getElementById('topbar-title').textContent = titles.dashboard.title;
 
-    if (!email || !password) {
-      status.textContent = 'Email and password are required.';
-      return;
+    function switchTab(tab) {
+      sections.forEach(section => section.classList.toggle('active', section.id === `tab-${tab}`));
+      buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+      document.getElementById('topbar-eyebrow').textContent = titles[tab]?.eyebrow || titles.dashboard.eyebrow;
+      document.getElementById('topbar-title').textContent = titles[tab]?.title || titles.dashboard.title;
+      window.scrollTo({ top: 0, behavior: 'instant' });
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
 
-      if (!res.ok) {
-        const result = await res.json().catch(() => null);
-        status.textContent = result?.detail || 'Login failed. Check credentials.';
-        return;
-      }
-
-      const data = await res.json();
-      currentUser = data;
-      currentTenantId = data.tenant_id;
-      currentLoginDate = new Date();
-      status.textContent = 'Login successful. Redirecting...';
-      showApp();
-      switchTab('dashboard');
-    } catch (err) {
-      console.error(err);
-      status.textContent = 'Unable to reach backend.';
-    }
-  }
-
-  async function registerUser() {
-    const fullName = document.getElementById('reg-full-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const phone = document.getElementById('reg-phone').value.trim();
-    const password = document.getElementById('reg-password').value.trim();
-    const gender = document.getElementById('reg-gender').value;
-    const commonId = document.getElementById('reg-common-id').value.trim();
-    const aadhaarNumber = document.getElementById('reg-aadhaar').value.trim();
-    const panNumber = document.getElementById('reg-pan').value.trim();
-    const status = document.getElementById('register-status');
-
-    if (!fullName || !email || !phone || !password) {
-      status.textContent = 'All required fields are needed for registration.';
-      return;
+    function switchAuthTab(tab) {
+      document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+      document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+      document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('login-status').textContent = '';
+      document.getElementById('register-status').textContent = '';
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, email, phone, password, role: 'tenant' })
-      });
-
-      if (!res.ok) {
-        const result = await res.json().catch(() => null);
-        status.textContent = result?.detail || 'Registration failed.';
-        return;
+    function showApp() {
+      document.body.classList.remove('logged-out');
+      document.getElementById('login-screen').style.display = 'none';
+      updateUserDisplay();
+      if (currentTenantId) {
+        refreshTenantDetails();
+        refreshRentData();
+        refreshKycStatus();
+        refreshFeedbackHistory();
+        refreshVisitorHistory();
       }
-
-      const data = await res.json();
-      const tenantRes = await fetch(`${API_BASE}/add-tenant`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: fullName, email, phone, gender, common_id: commonId, aadhaar_number: aadhaarNumber, pan_number: panNumber })
-      });
-
-      if (!tenantRes.ok) {
-        const tenantResult = await tenantRes.text();
-        status.textContent = `Tenant creation failed: ${tenantResult}`;
-        return;
-      }
-
-      const tenantData = await tenantRes.json();
-      const loginRes = await fetch(`${API_BASE}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (loginRes.ok) {
-        const loginData = await loginRes.json();
-        currentUser = loginData;
-        currentTenantId = loginData.tenant_id || tenantData.id;
-      } else {
-        currentUser = { user_id: data.id, full_name: fullName, email, phone, role: 'tenant', tenant_id: tenantData.id };
-        currentTenantId = tenantData.id;
-      }
-
-      currentLoginDate = new Date();
-      status.textContent = 'Account created successfully. Redirecting...';
-      showApp();
-      switchTab('dashboard');
-    } catch (err) {
-      console.error(err);
-      status.textContent = 'Unable to reach backend.';
     }
-  }
 
-  async function refreshRentData() {
-    if (!currentTenantId) return;
-
-    try {
-      const res = await fetch(`${API_BASE}/rent/tenant/${currentTenantId}`);
-      if (!res.ok) {
-        console.error('Rent fetch failed', await res.text());
-        return;
+    function toggleProfileEdit() {
+      isProfileEditOpen = !isProfileEditOpen;
+      const panel = document.getElementById('profile-edit-panel');
+      if (panel) {
+        panel.style.display = isProfileEditOpen ? 'block' : 'none';
       }
+      const button = document.querySelector('#tab-profile .btn-outline');
+      if (button) {
+        button.textContent = isProfileEditOpen ? 'Cancel edit' : 'Edit profile';
+      }
+    }
 
-      const payments = await res.json();
-      const tableBody = document.getElementById('rent-table-body');
-      const totalPaidEl = document.getElementById('total-paid');
-      const totalPaidCountEl = document.getElementById('total-paid-count');
-      const pendingAmountEl = document.getElementById('pending-amount');
-      const pendingCountEl = document.getElementById('pending-count');
-      const pendingDueEl = document.getElementById('pending-due');
-      const lateFeesEl = document.getElementById('late-fees');
-      const lateFeesStatusEl = document.getElementById('late-fees-status');
-      const nextDueDateEl = document.getElementById('next-due-date');
-      const nextDuePillEl = document.getElementById('next-due-pill');
-      const payNowBtn = document.getElementById('rent-pay-now-btn');
-
-      tableBody.innerHTML = '';
-      let paidTotal = 0;
-      let paidCount = 0;
-      let lateTotal = 0;
-      let nextDue = null;
-      let hasPaidHistory = false;
-
+    function updateUserDisplay() {
+      if (!currentUser) return;
+      const name = currentUser.full_name || 'Tenant';
+      document.getElementById('topbar-title').textContent = `Welcome back, ${name}`;
+      const initials = name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+      document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
+      const sidebarName = document.querySelector('.sidebar-footer .n');
+      const sidebarRole = document.querySelector('.sidebar-footer .r');
+      if (sidebarName) sidebarName.textContent = name;
+      if (sidebarRole) sidebarRole.textContent = currentUser.role === 'tenant' ? `Tenant · ID ${currentTenantId || '—'}` : currentUser.role;
+      // Update resident card and profile sections
+      const keycardNameEl = document.getElementById('keycard-name');
+      if (keycardNameEl) keycardNameEl.textContent = name;
+      const profileNameEl = document.getElementById('profile-name');
+      if (profileNameEl) profileNameEl.textContent = name;
+      document.querySelectorAll('.avatar-sm').forEach(el => el.textContent = initials);
+      const profileAvatarEl = document.querySelector('.profile-avatar');
+      if (profileAvatarEl) profileAvatarEl.textContent = initials;
+      const detailFullNameEl = document.getElementById('detail-full-name');
+      if (detailFullNameEl) detailFullNameEl.textContent = name;
+      const detailEmailEl = document.getElementById('detail-email');
+      const detailPhoneEl = document.getElementById('detail-phone');
+      const detailGenderEl = document.getElementById('detail-gender');
+      if (detailEmailEl) detailEmailEl.textContent = currentTenantDetails?.email || currentUser?.email || '—';
+      if (detailPhoneEl) detailPhoneEl.textContent = currentTenantDetails?.phone || currentUser?.phone || '—';
+      if (detailGenderEl) detailGenderEl.textContent = currentTenantDetails?.gender || '—';
+      // Resident since / check-in date from login timestamp
+      const sinceEl = document.getElementById('keycard-since');
+      const checkinEl = document.getElementById('detail-checkin');
       const baseDate = currentLoginDate || new Date();
-      const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate());
-      nextDue = dueDate;
+      const fmt = baseDate.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+      if (sinceEl) sinceEl.textContent = `RESIDENT SINCE ${fmt}`;
+      if (checkinEl) checkinEl.textContent = fmt;
+    }
 
-      if (payments && payments.length > 0) {
-        const paidPayments = payments.filter(p => p.payment_status === 'paid');
-        rentHistory = paidPayments;
-        hasPaidHistory = paidPayments.length > 0;
-        paidPayments.forEach(payment => {
-          const dueDateVal = payment.due_date ? new Date(payment.due_date) : dueDate;
-          const dueLabel = dueDateVal.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-          const amount = payment.total_amount ?? payment.amount ?? RENT_AMOUNT;
-          const method = payment.payment_method || '-';
-          const receipt = payment.receipt_number || '-';
-          paidTotal += amount;
-          paidCount += 1;
-          lateTotal += payment.late_fee || 0;
-          const row = document.createElement('tr');
-          row.innerHTML = `
+    async function refreshTenantDetails() {
+      if (!currentTenantId) return;
+      try {
+        const res = await fetch(`${API_BASE}/tenants/${currentTenantId}`);
+        if (!res.ok) throw new Error('Unable to fetch tenant details');
+        currentTenantDetails = await res.json();
+        console.log('tenant details:', currentTenantDetails);
+        if (!currentTenantDetails?.room_id && !currentTenantDetails?.bed_id) {
+          console.warn('Tenant details has no room_id or bed_id', currentTenantDetails);
+        }
+        const roomBadge = document.getElementById('sidebar-room-badge');
+        const profileRole = document.getElementById('profile-role');
+        const keycardRoom = document.getElementById('keycard-room');
+        const keycardBed = document.getElementById('keycard-bed');
+        const roomLabel = currentTenantDetails?.room_id != null ? `${currentTenantDetails.room_id}` : 'Not assigned';
+        const bedLabel = currentTenantDetails?.bed_id != null ? `${currentTenantDetails.bed_id}` : 'Not assigned';
+        if (roomBadge) roomBadge.textContent = (currentTenantDetails?.room_id != null || currentTenantDetails?.bed_id != null) ? `Room ID ${roomLabel} · Bed ID ${bedLabel}` : 'Room not assigned';
+        if (profileRole) profileRole.textContent = (currentTenantDetails?.room_id != null || currentTenantDetails?.bed_id != null) ? `Tenant · Room ID ${roomLabel}, Bed ID ${bedLabel}` : 'Tenant · Room not assigned';
+        if (keycardRoom) keycardRoom.textContent = roomLabel;
+        if (keycardBed) keycardBed.textContent = bedLabel;
+
+        const tenantName = document.getElementById('tenant-name');
+        const tenantEmail = document.getElementById('tenant-email');
+        const tenantPhone = document.getElementById('tenant-phone');
+        const tenantGender = document.getElementById('tenant-gender');
+        const tenantCommonId = document.getElementById('tenant-common-id');
+        const tenantAadhaar = document.getElementById('tenant-aadhaar');
+        const tenantPan = document.getElementById('tenant-pan');
+        const tenantAddress = document.getElementById('tenant-address');
+        const tenantEmergencyName = document.getElementById('tenant-emergency-name');
+        const tenantEmergencyPhone = document.getElementById('tenant-emergency-phone');
+        if (tenantName) tenantName.value = currentTenantDetails?.full_name || '';
+        if (tenantEmail) tenantEmail.value = currentTenantDetails?.email || '';
+        if (tenantPhone) tenantPhone.value = currentTenantDetails?.phone || '';
+        if (tenantGender) tenantGender.value = currentTenantDetails?.gender || '';
+        if (tenantCommonId) tenantCommonId.value = currentTenantDetails?.common_id || '';
+        if (tenantAadhaar) tenantAadhaar.value = currentTenantDetails?.aadhaar_number || '';
+        if (tenantPan) tenantPan.value = currentTenantDetails?.pan_number || '';
+        if (tenantAddress) tenantAddress.value = currentTenantDetails?.address || '';
+        if (tenantEmergencyName) tenantEmergencyName.value = currentTenantDetails?.emergency_contact_name || '';
+        if (tenantEmergencyPhone) tenantEmergencyPhone.value = currentTenantDetails?.emergency_contact_phone || '';
+        updateUserDisplay();
+      } catch (err) {
+        console.error('Error fetching tenant details', err);
+      }
+    }
+
+    async function saveProfileChanges() {
+      if (!currentTenantId) {
+        alert('Please login first.');
+        return;
+      }
+
+      const statusEl = document.getElementById('tenant-create-status');
+      const payload = {
+        full_name: document.getElementById('tenant-name').value.trim(),
+        email: document.getElementById('tenant-email').value.trim(),
+        phone: document.getElementById('tenant-phone').value.trim(),
+        gender: document.getElementById('tenant-gender').value,
+        common_id: document.getElementById('tenant-common-id').value.trim(),
+        aadhaar_number: document.getElementById('tenant-aadhaar').value.trim(),
+        pan_number: document.getElementById('tenant-pan').value.trim(),
+        address: document.getElementById('tenant-address').value.trim(),
+        emergency_contact_name: document.getElementById('tenant-emergency-name').value.trim(),
+        emergency_contact_phone: document.getElementById('tenant-emergency-phone').value.trim(),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/update-tenant/${currentTenantId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const result = await res.json().catch(() => null);
+          throw new Error(result?.detail || result?.error || 'Profile update failed');
+        }
+        statusEl.textContent = 'Profile updated successfully.';
+        await refreshTenantDetails();
+        toggleProfileEdit();
+      } catch (err) {
+        console.error(err);
+        if (statusEl) statusEl.textContent = err.message || 'Profile update failed.';
+      }
+    }
+
+    async function loginUser() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const status = document.getElementById('login-status');
+
+      if (!email || !password) {
+        status.textContent = 'Email and password are required.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!res.ok) {
+          const result = await res.json().catch(() => null);
+          status.textContent = result?.detail || 'Login failed. Check credentials.';
+          return;
+        }
+
+        const data = await res.json();
+        console.log('login success', data);
+        currentUser = data;
+        currentTenantId = data.tenant_id;
+        currentLoginDate = new Date();
+        status.textContent = 'Login successful. Redirecting...';
+        if (!currentTenantId) {
+          console.warn('Tenant ID missing after login, currentUser:', currentUser);
+        }
+        await refreshTenantDetails();
+        showApp();
+        switchTab('dashboard');
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Unable to reach backend.';
+      }
+    }
+
+    async function registerUser() {
+      const fullName = document.getElementById('reg-full-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      const gender = document.getElementById('reg-gender').value;
+      const commonId = document.getElementById('reg-common-id').value.trim();
+      const aadhaarNumber = document.getElementById('reg-aadhaar').value.trim();
+      const panNumber = document.getElementById('reg-pan').value.trim();
+      const status = document.getElementById('register-status');
+
+      if (!fullName || !email || !phone || !password) {
+        status.textContent = 'All required fields are needed for registration.';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: fullName, email, phone, password, role: 'tenant' })
+        });
+
+        if (!res.ok) {
+          const result = await res.json().catch(() => null);
+          status.textContent = result?.detail || 'Registration failed.';
+          return;
+        }
+
+        const data = await res.json();
+        const tenantRes = await fetch(`${API_BASE}/add-tenant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: fullName, email, phone, gender, common_id: commonId, aadhaar_number: aadhaarNumber, pan_number: panNumber })
+        });
+
+        if (!tenantRes.ok) {
+          const tenantResult = await tenantRes.text();
+          status.textContent = `Tenant creation failed: ${tenantResult}`;
+          return;
+        }
+
+        const tenantData = await tenantRes.json();
+        const loginRes = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (loginRes.ok) {
+          const loginData = await loginRes.json();
+          currentUser = loginData;
+          currentTenantId = loginData.tenant_id || tenantData.id;
+        } else {
+          currentUser = { user_id: data.id, full_name: fullName, email, phone, role: 'tenant', tenant_id: tenantData.id };
+          currentTenantId = tenantData.id;
+        }
+
+        currentLoginDate = new Date();
+        status.textContent = 'Account created successfully. Redirecting...';
+        await refreshTenantDetails();
+        showApp();
+        switchTab('dashboard');
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Unable to reach backend.';
+      }
+    }
+
+    async function refreshRentData() {
+      if (!currentTenantId) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/rent/tenant/${currentTenantId}`);
+        if (!res.ok) {
+          console.error('Rent fetch failed', await res.text());
+          return;
+        }
+
+        const payments = await res.json();
+        const tableBody = document.getElementById('rent-table-body');
+        const totalPaidEl = document.getElementById('total-paid');
+        const totalPaidCountEl = document.getElementById('total-paid-count');
+        const pendingAmountEl = document.getElementById('pending-amount');
+        const pendingCountEl = document.getElementById('pending-count');
+        const pendingDueEl = document.getElementById('pending-due');
+        const lateFeesEl = document.getElementById('late-fees');
+        const lateFeesStatusEl = document.getElementById('late-fees-status');
+        const nextDueDateEl = document.getElementById('next-due-date');
+        const nextDuePillEl = document.getElementById('next-due-pill');
+        const payNowBtn = document.getElementById('rent-pay-now-btn');
+
+        tableBody.innerHTML = '';
+        let paidTotal = 0;
+        let paidCount = 0;
+        let lateTotal = 0;
+        let nextDue = null;
+        let hasPaidHistory = false;
+
+        const baseDate = currentLoginDate || new Date();
+        const dueDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate());
+        nextDue = dueDate;
+
+        if (payments && payments.length > 0) {
+          const paidPayments = payments.filter(p => p.payment_status === 'paid');
+          rentHistory = paidPayments;
+          hasPaidHistory = paidPayments.length > 0;
+          paidPayments.forEach(payment => {
+            const dueDateVal = payment.due_date ? new Date(payment.due_date) : dueDate;
+            const dueLabel = dueDateVal.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const amount = payment.total_amount ?? payment.amount ?? RENT_AMOUNT;
+            const method = payment.payment_method || '-';
+            const receipt = payment.receipt_number || '-';
+            paidTotal += amount;
+            paidCount += 1;
+            lateTotal += payment.late_fee || 0;
+            const row = document.createElement('tr');
+            row.innerHTML = `
             <td>${payment.billing_period || 'Rent payment'}</td>
             <td class="mono">${dueLabel}</td>
             <td class="mono">₹${amount.toLocaleString('en-IN')}</td>
@@ -1654,59 +2544,59 @@
             <td><span class="status-badge paid"><span class="dot"></span>Paid</span></td>
             <td class="mono">${receipt}</td>
           `;
-          tableBody.appendChild(row);
-        });
-      }
+            tableBody.appendChild(row);
+          });
+        }
 
-      if (!hasPaidHistory) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No payments have been made yet.</td></tr>';
-      }
+        if (!hasPaidHistory) {
+          tableBody.innerHTML = '<tr><td colspan="6" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No payments have been made yet.</td></tr>';
+        }
 
-      totalPaidEl.textContent = `₹${paidTotal.toLocaleString('en-IN')}`;
-      totalPaidCountEl.textContent = `${paidCount} bill${paidCount === 1 ? '' : 's'}`;
-      const pendingAmount = hasPaidHistory ? 0 : RENT_AMOUNT;
-      const pendingCount = hasPaidHistory ? 0 : 1;
-      pendingAmountEl.textContent = `₹${pendingAmount.toLocaleString('en-IN')}`;
-      pendingCountEl.textContent = `${pendingCount} bill${pendingCount === 1 ? '' : 's'}`;
-      pendingDueEl.textContent = hasPaidHistory ? 'All clear' : `due ${nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`;
-      lateFeesEl.textContent = `₹${lateTotal.toLocaleString('en-IN')}`;
-      lateFeesStatusEl.textContent = lateTotal > 0 ? 'Late fees due' : (hasPaidHistory ? 'Clean record' : 'Waiting for payment');
-      nextDueDateEl.textContent = hasPaidHistory ? '—' : nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-      nextDuePillEl.textContent = hasPaidHistory ? 'Paid' : 'Upcoming';
+        totalPaidEl.textContent = `₹${paidTotal.toLocaleString('en-IN')}`;
+        totalPaidCountEl.textContent = `${paidCount} bill${paidCount === 1 ? '' : 's'}`;
+        const pendingAmount = hasPaidHistory ? 0 : RENT_AMOUNT;
+        const pendingCount = hasPaidHistory ? 0 : 1;
+        pendingAmountEl.textContent = `₹${pendingAmount.toLocaleString('en-IN')}`;
+        pendingCountEl.textContent = `${pendingCount} bill${pendingCount === 1 ? '' : 's'}`;
+        pendingDueEl.textContent = hasPaidHistory ? 'All clear' : `due ${nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`;
+        lateFeesEl.textContent = `₹${lateTotal.toLocaleString('en-IN')}`;
+        lateFeesStatusEl.textContent = lateTotal > 0 ? 'Late fees due' : (hasPaidHistory ? 'Clean record' : 'Waiting for payment');
+        nextDueDateEl.textContent = hasPaidHistory ? '—' : nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        nextDuePillEl.textContent = hasPaidHistory ? 'Paid' : 'Upcoming';
 
-      if (payNowBtn) {
-        payNowBtn.textContent = hasPaidHistory ? 'Rent already paid' : `Pay ₹${RENT_AMOUNT} now`;
-        payNowBtn.disabled = hasPaidHistory;
-      }
+        if (payNowBtn) {
+          payNowBtn.textContent = hasPaidHistory ? 'Rent already paid' : `Pay ₹${RENT_AMOUNT} now`;
+          payNowBtn.disabled = hasPaidHistory;
+        }
 
-      const dashRentValueEl = document.getElementById('dashboard-rent-due-value');
-      const dashRentPillEl = document.getElementById('dashboard-rent-due-pill');
-      const dashboardLedgerBody = document.getElementById('dashboard-ledger-body');
-      if (dashRentValueEl) dashRentValueEl.textContent = `₹${pendingAmount.toLocaleString('en-IN')}`;
-      if (dashRentPillEl) {
-        dashRentPillEl.textContent = hasPaidHistory ? 'No pending rent' : `Due ${nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`;
-        dashRentPillEl.className = `pill ${hasPaidHistory ? 'p-green' : 'p-amber'}`;
-      }
+        const dashRentValueEl = document.getElementById('dashboard-rent-due-value');
+        const dashRentPillEl = document.getElementById('dashboard-rent-due-pill');
+        const dashboardLedgerBody = document.getElementById('dashboard-ledger-body');
+        if (dashRentValueEl) dashRentValueEl.textContent = `₹${pendingAmount.toLocaleString('en-IN')}`;
+        if (dashRentPillEl) {
+          dashRentPillEl.textContent = hasPaidHistory ? 'No pending rent' : `Due ${nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}`;
+          dashRentPillEl.className = `pill ${hasPaidHistory ? 'p-green' : 'p-amber'}`;
+        }
 
-      if (dashboardLedgerBody) {
-        const recentPayments = payments
-          .slice()
-          .sort((a, b) => new Date(b.due_date || b.paid_date || 0) - new Date(a.due_date || a.paid_date || 0))
-          .slice(0, 3);
-        dashboardLedgerBody.innerHTML = '';
-        if (!recentPayments.length) {
-          dashboardLedgerBody.innerHTML = '<div class="ledger-row"><div class="ledger-left"><div class="ledger-meta"><div class="m1">No rent records available</div></div></div></div>';
-        } else {
-          recentPayments.forEach(payment => {
-            const dueDateVal = payment.due_date ? new Date(payment.due_date) : dueDate;
-            const dueText = dueDateVal.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-            const amount = payment.total_amount ?? payment.amount ?? RENT_AMOUNT;
-            const statusText = payment.payment_status === 'paid' ? 'Paid' : 'Pending';
-            const statusColor = payment.payment_status === 'paid' ? 'var(--primary-700)' : 'var(--amber)';
-            const paymentMethod = payment.payment_method ? ` · ${payment.payment_method}` : '';
-            const row = document.createElement('div');
-            row.className = 'ledger-row';
-            row.innerHTML = `
+        if (dashboardLedgerBody) {
+          const recentPayments = payments
+            .slice()
+            .sort((a, b) => new Date(b.due_date || b.paid_date || 0) - new Date(a.due_date || a.paid_date || 0))
+            .slice(0, 3);
+          dashboardLedgerBody.innerHTML = '';
+          if (!recentPayments.length) {
+            dashboardLedgerBody.innerHTML = '<div class="ledger-row"><div class="ledger-left"><div class="ledger-meta"><div class="m1">No rent records available</div></div></div></div>';
+          } else {
+            recentPayments.forEach(payment => {
+              const dueDateVal = payment.due_date ? new Date(payment.due_date) : dueDate;
+              const dueText = dueDateVal.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+              const amount = payment.total_amount ?? payment.amount ?? RENT_AMOUNT;
+              const statusText = payment.payment_status === 'paid' ? 'Paid' : 'Pending';
+              const statusColor = payment.payment_status === 'paid' ? 'var(--primary-700)' : 'var(--amber)';
+              const paymentMethod = payment.payment_method ? ` · ${payment.payment_method}` : '';
+              const row = document.createElement('div');
+              row.className = 'ledger-row';
+              row.innerHTML = `
               <div class="ledger-left">
                 <div class="ledger-dot" style="background:${payment.payment_status === 'paid' ? 'var(--primary-100)' : 'var(--amber-bg)'}; color:${statusColor};">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -1718,302 +2608,303 @@
               </div>
               <div class="ledger-amt">₹${amount.toLocaleString('en-IN')}<span class="st" style="color:${statusColor};">${statusText}</span></div>
             `;
-            dashboardLedgerBody.appendChild(row);
-          });
+              dashboardLedgerBody.appendChild(row);
+            });
+          }
         }
+
+        try {
+          const keycardNext = document.getElementById('keycard-next-due');
+          if (keycardNext) keycardNext.textContent = hasPaidHistory ? '—' : nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        } catch (e) { }
+      } catch (err) {
+        console.error('Error fetching rent data', err);
+      }
+    }
+
+    async function triggerRentPayment() {
+      if (!currentTenantId) {
+        alert('Please login first.');
+        return;
+      }
+      const paymentIdInput = prompt('Enter the payment ID (receipt reference):');
+      if (!paymentIdInput) {
+        return;
+      }
+      const paymentMode = prompt('Enter payment mode (UPI/Card/Cash):');
+      if (!paymentMode) {
+        return;
       }
 
       try {
-        const keycardNext = document.getElementById('keycard-next-due');
-        if (keycardNext) keycardNext.textContent = hasPaidHistory ? '—' : nextDue.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-      } catch (e) { }
-    } catch (err) {
-      console.error('Error fetching rent data', err);
-    }
-  }
-
-  async function triggerRentPayment() {
-    if (!currentTenantId) {
-      alert('Please login first.');
-      return;
-    }
-    const paymentIdInput = prompt('Enter the payment ID (receipt reference):');
-    if (!paymentIdInput) {
-      return;
-    }
-    const paymentMode = prompt('Enter payment mode (UPI/Card/Cash):');
-    if (!paymentMode) {
-      return;
-    }
-
-    try {
-      const now = new Date();
-      const billingPeriod = now.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
-      const res = await fetch(`${API_BASE}/rent/pay/0`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenant_id: currentTenantId,
-          payment_method: paymentMode,
-          transaction_reference: paymentIdInput,
-          amount: RENT_AMOUNT,
-          billing_period: billingPeriod,
-        })
-      });
-      if (!res.ok) {
-        const result = await res.json().catch(() => null);
-        throw new Error(result?.detail || 'Payment failed');
+        const now = new Date();
+        const billingPeriod = now.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+        const res = await fetch(`${API_BASE}/rent/pay/0`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tenant_id: currentTenantId,
+            payment_method: paymentMode,
+            transaction_reference: paymentIdInput,
+            amount: RENT_AMOUNT,
+            billing_period: billingPeriod,
+          })
+        });
+        if (!res.ok) {
+          const result = await res.json().catch(() => null);
+          throw new Error(result?.detail || 'Payment failed');
+        }
+        alert('Payment recorded.');
+        refreshRentData();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || 'Unable to process payment');
       }
-      alert('Payment recorded.');
-      refreshRentData();
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'Unable to process payment');
-    }
-  }
-
-  async function uploadKycDocs() {
-    if (!currentTenantId) {
-      alert('Please login first.');
-      return;
     }
 
-    const aadhaarFile = document.getElementById('aadhaar-file').files[0];
-    const panFile = document.getElementById('pan-file').files[0];
-    const idCardFile = document.getElementById('idcard-file').files[0];
-    const status = document.getElementById('kyc-status');
-
-    if (!aadhaarFile || !panFile || !idCardFile) {
-      status.textContent = 'Please select all three PDF files.';
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('aadhaar_pdf', aadhaarFile);
-    formData.append('pan_pdf', panFile);
-    formData.append('id_card_pdf', idCardFile);
-
-    try {
-      const res = await fetch(`${API_BASE}/upload-kyc/${currentTenantId}`, {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) {
-        const result = await res.text();
-        throw new Error(result || 'Upload failed');
-      }
-      status.textContent = 'KYC documents uploaded successfully.';
-      document.getElementById('aadhaar-status').innerHTML = '<span class="dot"></span>Verified';
-      document.getElementById('pan-status').innerHTML = '<span class="dot"></span>Verified';
-      document.getElementById('idcard-status').innerHTML = '<span class="dot"></span>Verified';
-      document.getElementById('aadhaar-file').value = '';
-      document.getElementById('pan-file').value = '';
-      document.getElementById('idcard-file').value = '';
-      refreshKycStatus();
-    } catch (err) {
-      console.error(err);
-      status.textContent = err.message || 'Upload failed.';
-    }
-  }
-
-  async function submitVisitor() {
-    if (!currentTenantId) {
-      alert('Please login first.');
-      return;
-    }
-    const name = document.getElementById('v-name').value.trim();
-    const phone = document.getElementById('v-phone').value.trim();
-    const purpose = document.getElementById('v-purpose').value.trim();
-    if (!name || !phone || !purpose) {
-      alert('Please fill all visitor fields.');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/add-visitor`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant_id: currentTenantId, visitor_name: name, visitor_phone: phone, purpose })
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => null);
-        throw new Error(txt || 'Failed to log visitor');
-      }
-      alert('Visitor logged successfully.');
-      document.getElementById('v-name').value = '';
-      document.getElementById('v-phone').value = '';
-      document.getElementById('v-purpose').value = '';
-      refreshVisitorHistory();
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'Unable to log visitor');
-    }
-  }
-
-  async function refreshVisitorHistory() {
-    if (!currentTenantId) return;
-    try {
-      const res = await fetch(`${API_BASE}/visitors/tenant/${currentTenantId}`);
-      if (!res.ok) {
-        console.error('Failed to fetch visitors', await res.text());
+    async function uploadKycDocs() {
+      if (!currentTenantId) {
+        alert('Please login first.');
         return;
       }
-      const items = await res.json();
-      const tbody = document.getElementById('visitor-table-body');
-      tbody.innerHTML = '';
-      if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No visitors logged.</td></tr>';
+
+      const aadhaarFile = document.getElementById('aadhaar-file').files[0];
+      const panFile = document.getElementById('pan-file').files[0];
+      const idCardFile = document.getElementById('idcard-file').files[0];
+      const status = document.getElementById('kyc-status');
+
+      if (!aadhaarFile || !panFile || !idCardFile) {
+        status.textContent = 'Please select all three PDF files.';
         return;
       }
-      items.forEach(v => {
-        const entry = v.entry_time ? new Date(v.entry_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-        const exit = v.exit_time ? new Date(v.exit_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-        const statusClass = v.status === 'exited' ? 'exited' : 'inside';
-        const row = document.createElement('tr');
-        row.innerHTML = `
+
+      const formData = new FormData();
+      formData.append('aadhaar_pdf', aadhaarFile);
+      formData.append('pan_pdf', panFile);
+      formData.append('id_card_pdf', idCardFile);
+
+      try {
+        const res = await fetch(`${API_BASE}/upload-kyc/${currentTenantId}`, {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) {
+          const result = await res.text();
+          throw new Error(result || 'Upload failed');
+        }
+        status.textContent = 'KYC documents uploaded successfully.';
+        document.getElementById('aadhaar-status').innerHTML = '<span class="dot"></span>Verified';
+        document.getElementById('pan-status').innerHTML = '<span class="dot"></span>Verified';
+        document.getElementById('idcard-status').innerHTML = '<span class="dot"></span>Verified';
+        document.getElementById('aadhaar-file').value = '';
+        document.getElementById('pan-file').value = '';
+        document.getElementById('idcard-file').value = '';
+        refreshKycStatus();
+      } catch (err) {
+        console.error(err);
+        status.textContent = err.message || 'Upload failed.';
+      }
+    }
+
+    async function submitVisitor() {
+      if (!currentTenantId) {
+        alert('Please login first.');
+        return;
+      }
+      const name = document.getElementById('v-name').value.trim();
+      const phone = document.getElementById('v-phone').value.trim();
+      const purpose = document.getElementById('v-purpose').value.trim();
+      if (!name || !phone || !purpose) {
+        alert('Please fill all visitor fields.');
+        return;
+      }
+      try {
+        const res = await fetch(`${API_BASE}/add-visitor`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant_id: currentTenantId, visitor_name: name, visitor_phone: phone, purpose })
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => null);
+          throw new Error(txt || 'Failed to log visitor');
+        }
+        alert('Visitor logged successfully.');
+        document.getElementById('v-name').value = '';
+        document.getElementById('v-phone').value = '';
+        document.getElementById('v-purpose').value = '';
+        refreshVisitorHistory();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || 'Unable to log visitor');
+      }
+    }
+
+    async function refreshVisitorHistory() {
+      if (!currentTenantId) return;
+      try {
+        const res = await fetch(`${API_BASE}/visitors/tenant/${currentTenantId}`);
+        if (!res.ok) {
+          console.error('Failed to fetch visitors', await res.text());
+          return;
+        }
+        const items = await res.json();
+        const tbody = document.getElementById('visitor-table-body');
+        tbody.innerHTML = '';
+        if (!items || items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No visitors logged.</td></tr>';
+          return;
+        }
+        items.forEach(v => {
+          const entry = v.entry_time ? new Date(v.entry_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+          const exit = v.exit_time ? new Date(v.exit_time).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+          const statusClass = v.status === 'exited' ? 'exited' : 'inside';
+          const row = document.createElement('tr');
+          row.innerHTML = `
           <td>${v.visitor_name}${v.visitor_phone ? ' · ' + v.visitor_phone : ''}</td>
           <td>${v.purpose || '-'}</td>
           <td class="mono">${entry}</td>
           <td class="mono">${exit}</td>
           <td><span class="status-badge ${statusClass}"><span class="dot"></span>${v.status || 'inside'}</span></td>
         `;
-        tbody.appendChild(row);
-      });
-    } catch (err) {
-      console.error('Error refreshing visitors', err);
-    }
-  }
-
-  async function submitFeedback() {
-    if (!currentTenantId) {
-      alert('Please login first.');
-      return;
-    }
-    const title = document.getElementById('f-title').value.trim();
-    const desc = document.getElementById('f-desc').value.trim();
-    if (!title || !desc) {
-      alert('Please provide a title and description.');
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/add-feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tenant_id: currentTenantId, title, description: desc })
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => null);
-        throw new Error(txt || 'Failed to submit feedback');
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Error refreshing visitors', err);
       }
-      alert('Complaint submitted.');
-      document.getElementById('f-title').value = '';
-      document.getElementById('f-desc').value = '';
-      refreshFeedbackHistory();
-    } catch (err) {
-      console.error(err);
-      alert(err.message || 'Unable to submit feedback');
     }
-  }
 
-  async function createTenant() {
-    const name = document.getElementById('tenant-name').value.trim();
-    const email = document.getElementById('tenant-email').value.trim();
-    const phone = document.getElementById('tenant-phone').value.trim();
-    const gender = document.getElementById('tenant-gender').value;
-    const statusEl = document.getElementById('tenant-create-status');
-    if (!name || !email || !phone) {
-      if (statusEl) statusEl.textContent = 'Name, email and phone are required.';
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/add-tenant`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ full_name: name, email, phone, gender })
-      });
-      if (!res.ok) {
-        const txt = await res.text().catch(() => null);
-        if (statusEl) statusEl.textContent = `Create failed: ${txt || res.statusText}`;
+    async function submitFeedback() {
+      if (!currentTenantId) {
+        alert('Please login first.');
         return;
       }
-      const data = await res.json();
-      currentTenantId = data.id;
-      currentUser = currentUser || {};
-      currentUser.full_name = name;
-      currentUser.tenant_id = data.id;
-      currentLoginDate = new Date();
-      if (statusEl) statusEl.textContent = 'Tenant record created.';
-      updateUserDisplay();
-      refreshRentData();
-      refreshKycStatus();
-    } catch (err) {
-      console.error(err);
-      if (statusEl) statusEl.textContent = err.message || 'Unable to create tenant.';
-    }
-  }
-
-  async function refreshKycStatus() {
-    if (!currentTenantId) return;
-    try {
-      const res = await fetch(`${API_BASE}/tenants/${currentTenantId}`);
-      if (!res.ok) return;
-      const tenant = await res.json();
-      const verified = tenant.status === 'verified' || tenant.status === 'under_review';
-      const statusLabel = verified ? 'Verified' : 'Pending';
-      const pillLabel = verified ? 'All docs approved' : 'Documents pending review';
-      const badgeClass = verified ? 'paid' : 'pending';
-      document.getElementById('aadhaar-status').className = `status-badge ${badgeClass}`;
-      document.getElementById('aadhaar-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
-      document.getElementById('pan-status').className = `status-badge ${badgeClass}`;
-      document.getElementById('pan-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
-      document.getElementById('idcard-status').className = `status-badge ${badgeClass}`;
-      document.getElementById('idcard-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
-      const kycStat = document.querySelector('#tab-dashboard .stat-card.c-green .stat-value');
-      const kycFoot = document.querySelector('#tab-dashboard .stat-card.c-green .stat-foot .pill');
-      if (kycStat) kycStat.textContent = statusLabel;
-      if (kycFoot) kycFoot.textContent = pillLabel;
-    } catch (err) {
-      console.error('KYC refresh failed', err);
-    }
-  }
-
-  function viewKyc(type) {
-    alert('KYC view is not available in this demo.');
-  }
-
-  async function refreshFeedbackHistory() {
-    if (!currentTenantId) return;
-    try {
-      const res = await fetch(`${API_BASE}/feedback/tenant/${currentTenantId}`);
-      if (!res.ok) {
-        console.error('Failed to fetch feedback', await res.text());
+      const title = document.getElementById('f-title').value.trim();
+      const desc = document.getElementById('f-desc').value.trim();
+      if (!title || !desc) {
+        alert('Please provide a title and description.');
         return;
       }
-      const items = await res.json();
-      const tbody = document.getElementById('feedback-table-body');
-      tbody.innerHTML = '';
-      if (!items || items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No complaints yet.</td></tr>';
+      try {
+        const res = await fetch(`${API_BASE}/add-feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenant_id: currentTenantId, title, description: desc })
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => null);
+          throw new Error(txt || 'Failed to submit feedback');
+        }
+        alert('Complaint submitted.');
+        document.getElementById('f-title').value = '';
+        document.getElementById('f-desc').value = '';
+        refreshFeedbackHistory();
+      } catch (err) {
+        console.error(err);
+        alert(err.message || 'Unable to submit feedback');
+      }
+    }
+
+    async function createTenant() {
+      const name = document.getElementById('tenant-name').value.trim();
+      const email = document.getElementById('tenant-email').value.trim();
+      const phone = document.getElementById('tenant-phone').value.trim();
+      const gender = document.getElementById('tenant-gender').value;
+      const statusEl = document.getElementById('tenant-create-status');
+      if (!name || !email || !phone) {
+        if (statusEl) statusEl.textContent = 'Name, email and phone are required.';
         return;
       }
-      items.forEach(fb => {
-        const created = fb.created_at ? new Date(fb.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-        const resolved = fb.resolved_at ? new Date(fb.resolved_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-        const statusClass = fb.status === 'resolved' ? 'resolved' : (fb.status === 'in_progress' ? 'progress' : 'pending');
-        const statusLabel = fb.status ? (fb.status === 'in_progress' ? 'In progress' : (fb.status === 'resolved' ? 'Resolved' : fb.status)) : 'Pending';
-        const row = document.createElement('tr');
-        row.innerHTML = `
+      try {
+        const res = await fetch(`${API_BASE}/add-tenant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: name, email, phone, gender })
+        });
+        if (!res.ok) {
+          const txt = await res.text().catch(() => null);
+          if (statusEl) statusEl.textContent = `Create failed: ${txt || res.statusText}`;
+          return;
+        }
+        const data = await res.json();
+        currentTenantId = data.id;
+        currentUser = currentUser || {};
+        currentUser.full_name = name;
+        currentUser.tenant_id = data.id;
+        currentLoginDate = new Date();
+        if (statusEl) statusEl.textContent = 'Tenant record created.';
+        updateUserDisplay();
+        refreshRentData();
+        refreshKycStatus();
+      } catch (err) {
+        console.error(err);
+        if (statusEl) statusEl.textContent = err.message || 'Unable to create tenant.';
+      }
+    }
+
+    async function refreshKycStatus() {
+      if (!currentTenantId) return;
+      try {
+        const res = await fetch(`${API_BASE}/tenants/${currentTenantId}`);
+        if (!res.ok) return;
+        const tenant = await res.json();
+        const verified = tenant.status === 'verified' || tenant.status === 'under_review';
+        const statusLabel = verified ? 'Verified' : 'Pending';
+        const pillLabel = verified ? 'All docs approved' : 'Documents pending review';
+        const badgeClass = verified ? 'paid' : 'pending';
+        document.getElementById('aadhaar-status').className = `status-badge ${badgeClass}`;
+        document.getElementById('aadhaar-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
+        document.getElementById('pan-status').className = `status-badge ${badgeClass}`;
+        document.getElementById('pan-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
+        document.getElementById('idcard-status').className = `status-badge ${badgeClass}`;
+        document.getElementById('idcard-status').innerHTML = `<span class="dot"></span>${statusLabel}`;
+        const kycStat = document.querySelector('#tab-dashboard .stat-card.c-green .stat-value');
+        const kycFoot = document.querySelector('#tab-dashboard .stat-card.c-green .stat-foot .pill');
+        if (kycStat) kycStat.textContent = statusLabel;
+        if (kycFoot) kycFoot.textContent = pillLabel;
+      } catch (err) {
+        console.error('KYC refresh failed', err);
+      }
+    }
+
+    function viewKyc(type) {
+      alert('KYC view is not available in this demo.');
+    }
+
+    async function refreshFeedbackHistory() {
+      if (!currentTenantId) return;
+      try {
+        const res = await fetch(`${API_BASE}/feedback/tenant/${currentTenantId}`);
+        if (!res.ok) {
+          console.error('Failed to fetch feedback', await res.text());
+          return;
+        }
+        const items = await res.json();
+        const tbody = document.getElementById('feedback-table-body');
+        tbody.innerHTML = '';
+        if (!items || items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="mono" style="text-align:center; padding:18px 0; color:var(--ink-400);">No complaints yet.</td></tr>';
+          return;
+        }
+        items.forEach(fb => {
+          const created = fb.created_at ? new Date(fb.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+          const resolved = fb.resolved_at ? new Date(fb.resolved_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+          const statusClass = fb.status === 'resolved' ? 'resolved' : (fb.status === 'in_progress' ? 'progress' : 'pending');
+          const statusLabel = fb.status ? (fb.status === 'in_progress' ? 'In progress' : (fb.status === 'resolved' ? 'Resolved' : fb.status)) : 'Pending';
+          const row = document.createElement('tr');
+          row.innerHTML = `
           <td>${fb.title}</td>
           <td class="mono">${created}</td>
           <td><span class="status-badge ${statusClass}"><span class="dot"></span>${statusLabel}</span></td>
           <td class="mono">${resolved}</td>
         `;
-        tbody.appendChild(row);
-      });
-    } catch (err) {
-      console.error('Error refreshing feedback', err);
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error('Error refreshing feedback', err);
+      }
     }
-  }
-</script>
+  </script>
 
 </body>
+
 </html>
