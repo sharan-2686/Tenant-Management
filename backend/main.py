@@ -131,6 +131,7 @@ class UserLogin(BaseModel):
     common_id: Optional[str] = None
     aadhaar_number: Optional[str] = None
     pan_number: Optional[str] = None
+    tenant_id: Optional[int] = None
 
 def getdb():
    db=SessionLocal()
@@ -812,84 +813,55 @@ def register_user(user: UserRegister, db: Session = Depends(getdb)):
 
 @app.post("/login")
 def login_user(user: UserLogin, db: Session = Depends(getdb)):
-    if user.email and user.password:
+    if user.email:
         normalized_email = (user.email or "").strip().lower()
+
+        # Try to find the user account by email
         db_user = db.query(dbuser).filter(dbuser.email == normalized_email).first()
         if not db_user:
             db_user = db.query(dbuser).filter(dbuser.email == user.email).first()
-        if db_user and db_user.password_hash == user.password:
-            tenant_id = None
-            if db_user.role == "tenant":
-                tenant = db.query(dbtenant).filter(dbtenant.user_id == db_user.id).first()
-                if not tenant:
-                    tenant = db.query(dbtenant).filter(
-                        or_(
-                            dbtenant.email == db_user.email,
-                            dbtenant.email == normalized_email,
-                            dbtenant.phone == db_user.phone,
-                        )
-                    ).first()
-                if tenant:
-                    tenant_id = tenant.id
 
-            return {
-                "message": "Login successful",
-                "user_id": db_user.id,
-                "full_name": db_user.full_name,
-                "email": db_user.email,
-                "phone": db_user.phone,
-                "role": db_user.role,
-                "tenant_id": tenant_id
-            }
+        # Resolve the tenant record for this user
+        tenant = None
+        if db_user:
+            tenant = db.query(dbtenant).filter(dbtenant.user_id == db_user.id).first()
+            if not tenant:
+                tenant = db.query(dbtenant).filter(
+                    or_(
+                        dbtenant.email == db_user.email,
+                        dbtenant.email == normalized_email,
+                        dbtenant.phone == db_user.phone,
+                    )
+                ).order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
 
-    if user.email and not user.password:
-        tenant = db.query(dbtenant).filter(
-            or_(
-                dbtenant.email == user.email,
-                dbtenant.email == (user.email or "").strip().lower(),
-            )
-        ).order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
-        if tenant:
-            return {
-                "message": "Login successful",
-                "user_id": None,
-                "full_name": tenant.full_name,
-                "email": tenant.email,
-                "phone": tenant.phone,
-                "role": "tenant",
-                "tenant_id": tenant.id,
-                "common_id": tenant.common_id,
-                "aadhaar_number": tenant.aadhaar_number,
-                "pan_number": tenant.pan_number,
-            }
+        # Fallback: find tenant by email directly in tenants table
+        if not tenant:
+            tenant = db.query(dbtenant).filter(
+                or_(
+                    dbtenant.email == user.email,
+                    dbtenant.email == normalized_email,
+                )
+            ).order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
 
-    if not any([user.common_id, user.aadhaar_number, user.pan_number]):
-        raise HTTPException(status_code=401, detail="Invalid email or password")
+        if not tenant:
+            raise HTTPException(status_code=401, detail="No tenant found with this email.")
 
-    tenant_query = db.query(dbtenant)
-    if user.common_id:
-        tenant_query = tenant_query.filter(dbtenant.common_id == user.common_id)
-    if user.aadhaar_number:
-        tenant_query = tenant_query.filter(dbtenant.aadhaar_number == user.aadhaar_number)
-    if user.pan_number:
-        tenant_query = tenant_query.filter(dbtenant.pan_number == user.pan_number)
+        # Validate tenant_id if provided
+        if user.tenant_id is not None and tenant.id != user.tenant_id:
+            raise HTTPException(status_code=401, detail="Tenant ID does not match. Please check and try again.")
 
-    tenant = tenant_query.order_by(dbtenant.room_id.isnot(None).desc(), dbtenant.id.desc()).first()
-    if not tenant:
-        raise HTTPException(status_code=401, detail="No matching PG tenant found")
+        return {
+            "message": "Login successful",
+            "user_id": db_user.id if db_user else None,
+            "full_name": tenant.full_name or (db_user.full_name if db_user else None),
+            "email": tenant.email or (db_user.email if db_user else None),
+            "phone": tenant.phone or (db_user.phone if db_user else None),
+            "role": db_user.role if db_user else "tenant",
+            "tenant_id": tenant.id,
+        }
 
-    return {
-        "message": "Login successful",
-        "user_id": None,
-        "full_name": tenant.full_name,
-        "email": tenant.email,
-        "phone": tenant.phone,
-        "role": "tenant",
-        "tenant_id": tenant.id,
-        "common_id": tenant.common_id,
-        "aadhaar_number": tenant.aadhaar_number,
-        "pan_number": tenant.pan_number,
-    }
+    raise HTTPException(status_code=400, detail="Email is required.")
+
 
 
 @app.get("/properties")
